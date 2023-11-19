@@ -1,0 +1,8 @@
+---
+
+- name: Start Docker
+  shell: docker-compose -f /docker/docker-compose.yml up -d
+
+#- name: Start Docker
+#  command: >
+#    docker-compose -f /docker/docker-compose.yml up -d

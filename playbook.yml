@@ -7,3 +7,9 @@
       apt:
         update_cache: true
         cache_valid_time: 3600
+
+# add "apt install net-tools" to pre-tasks
+
+  roles:
+    - geerlingguy.docker
+    - initialize

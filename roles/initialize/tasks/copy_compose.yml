@@ -1,0 +1,11 @@
+---
+
+- name: Creates directory
+  ansible.builtin.file:
+    path: /docker
+    state: directory
+
+- name: Copy Docker Compose File to Server
+  copy:
+    src: /Users/edbasurto/homelab/homeserver/docker/docker-compose.yml
+    dest: /docker/
