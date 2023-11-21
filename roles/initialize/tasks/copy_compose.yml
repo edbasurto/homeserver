@@ -7,5 +7,5 @@
 
 - name: Copy Docker Compose File to Server
   copy:
-    src: /Users/edbasurto/homelab/homeserver/docker/docker-compose.yml
+    src: ./docker/docker-compose.yml
     dest: /docker/
