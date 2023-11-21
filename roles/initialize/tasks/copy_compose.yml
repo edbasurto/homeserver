@@ -8,4 +8,4 @@
 - name: Copy Docker Compose File to Server
   copy:
     src: ./docker/docker-compose.yml
-    dest: /docker/
+    dest: /docker/docker-compose.yml

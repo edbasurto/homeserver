@@ -1,6 +1,5 @@
 ---
-#- include_tasks: install_docker.yml
-
+- include_tasks: install_dependencies.yml
 - name: Setup pihole
   ansible.builtin.include_tasks: "setup-pihole.yml"
 - include_tasks: copy_compose.yml

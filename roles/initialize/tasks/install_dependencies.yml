@@ -1,8 +1,9 @@
 ---
 
-# chagne to install dependencies
+# change to install dependencies
 
-- name: install docker dependencies
+- name: Install docker dependencies and configure repositories
+  become: yes
   apt:
     name:
       - apt-transport-https
@@ -10,18 +11,31 @@
       - curl
       - gnupg-agent
       - software-properties-common
+      - python3
+      - python3-pip
+      - libffi-dev
+      - python3-dev
+      - gcc
+      - libc6-dev
+      - make
+    state: present
     update_cache: yes
-- name: add docker gpg key
+
+- name: Add docker GPG key
+  become: yes
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
     keyring: /etc/apt/keyrings/docker.gpg
+
 - name: add docker repository
   apt_repository:
     filename: docker 
     repo: deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename|lower }} stable
     state: present
-- name: install docker engine
+
+- name: Install docker engine, CLI, and other necessary components
+  become: yes
   apt:
     name:
       - docker-ce
@@ -30,4 +44,17 @@
       - docker-buildx-plugin
       - docker-scan-plugin
       - docker-compose-plugin
+    state: present
     update_cache: yes
+
+- name: Install Python libraries using pip
+  become: yes
+  pip:
+    name:
+      - requests
+      - docker
+      - docker-compose
+    state: present
+    executable: pip3  # Ensure pip for Python 3 is used
+
+
