@@ -1,2 +1,0 @@
-[home]
-homeserver ansible_host=192.168.50.249 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=/Users/ed/.ssh/homeserver
