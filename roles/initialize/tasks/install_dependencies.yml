@@ -56,5 +56,4 @@
       - docker-compose
     state: present
     executable: pip3  # Ensure pip for Python 3 is used
-
-
+    
