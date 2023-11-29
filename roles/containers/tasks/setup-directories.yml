@@ -1,0 +1,32 @@
+---
+
+- name: Create Docker Directory
+  ansible.builtin.file:
+    path: /docker
+    state: directory
+
+- name: Create Container Directories
+  file:
+    mode: 0777
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+  loop:
+    - /opt/hass
+    - /opt/portainer
+    - /opt/prometheus
+    - /opt/grafana
+    - /opt/homepage
+    - /opt/homarr
+    - /opt/homarr/icons
+    - /opt/uptimekuma
+    - /opt/cadvisor
+    - /opt/nginx/data
+    - /opt/nginx/letsencrypt
+    - /opt/filebrowser
+    - /opt/pihole/etc-pihole
+    - /opt/pihole/etc-dnsmasq.d
+
+# What does this do?
+#- name: Changing Permissions of "/opt" 
+#  shell: chown ookami:ookami /opt

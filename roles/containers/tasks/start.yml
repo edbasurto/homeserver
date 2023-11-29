@@ -1,0 +1,25 @@
+---
+
+- name: Get Running Containers
+  docker_host_info:
+    containers: yes
+  register: docker_info
+
+- name: Stop Running Containers
+  docker_container:
+    name: "{{ item }}"
+    state: stopped
+  loop: "{{ docker_info.containers | map(attribute='Id') | list }}"
+  
+
+- name: Start Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker
+  register: output
+
+#- name: Start Docker
+#  shell: docker-compose -f /docker/docker-compose.yml up -d
+
+#- name: Start Docker
+#  command: >
+#    docker-compose -f /docker/docker-compose.yml up -d
