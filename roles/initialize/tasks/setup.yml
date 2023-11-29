@@ -1,6 +1,10 @@
 ---
 
-# change to install dependencies
+# TODO: Revisit to pin versions to avoid breaking changes.
+- name: Install System Updates
+  apt:
+    update_cache: yes
+    upgrade: yes
 
 - name: Install docker dependencies and configure repositories
   become: yes

@@ -14,5 +14,9 @@
 # add "apt install net-tools" to pre-tasks
 
   roles:
-    - geerlingguy.docker
     - initialize
+    - geerlingguy.docker
+    - containers
+
+# run playbook:
+# $ ansible-playbook -K playbook.yml

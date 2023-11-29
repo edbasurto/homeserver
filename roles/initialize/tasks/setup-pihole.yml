@@ -22,3 +22,11 @@
   ansible.builtin.systemd:
     name: systemd-resolved
     state: restarted
+    enabled: true
+
+- name: Add PiHole DNS IP
+  ansible.builtin.lineinfile:
+    state: present
+    path: /etc/systemd/resolved.conf
+    regexp: '^#DNS'
+    line: 'DNS={{ ansible_default_ipv4.address }}'

@@ -1,6 +1,6 @@
 ---
-- include_tasks: install_dependencies.yml
+
+- include_tasks: setup.yml
 - name: Setup pihole
   ansible.builtin.include_tasks: "setup-pihole.yml"
-- include_tasks: copy_compose.yml
-- include_tasks: start.yml
+#- include_tasks: ssh.yml
