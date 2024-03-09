@@ -5,6 +5,16 @@
     src: ./docker/docker-compose.yml
     dest: /docker/docker-compose.yml
 
+- name: Copy Dashdot Docker Compose File to Server
+  copy:
+    src: ./docker/dashdot/docker-compose.yml
+    dest: /docker/dashdot/docker-compose.yml
+
+- name: Copy Actual Budget Docker Compose File to Server
+  copy:
+    src: ./docker/actual-budget/docker-compose.yml
+    dest: /docker/actual-budget/docker-compose.yml
+
 - name: Copy Custom Homarr Logo to Server
   copy:
     src: Ookami_Logo_Transparent.png

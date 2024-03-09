@@ -5,6 +5,21 @@
     path: /docker
     state: directory
 
+- name: Create Dashdot Docker Directory
+  ansible.builtin.file:
+    path: /docker/dashdot
+    state: directory
+
+- name: Create Actual Budget Directory
+  ansible.builtin.file:
+    path: /docker/actual-budget
+    state: directory
+
+- name: Create Tailscale Tmp Directory
+  ansible.builtin.file:
+    path: /tmp/Tailscale
+    state: directory
+
 - name: Create Container Directories
   file:
     mode: 0777
@@ -26,6 +41,73 @@
     - /opt/filebrowser
     - /opt/pihole/etc-pihole
     - /opt/pihole/etc-dnsmasq.d
+    - /opt/actual-data
+
+- name: Create Data Folder
+  ansible.builtin.file:
+    path: /data
+    state: directory
+
+- name: Create Torrent Folder
+  ansible.builtin.file:
+    path: /data/torrents
+    state: directory
+
+- name: Create Usenet Folder
+  ansible.builtin.file:
+    path: /data/usenet
+    state: directory
+
+- name: Create Incomplete Folder
+  ansible.builtin.file:
+    path: /data/usenet/incomplete
+    state: directory
+
+- name: Create Complete Folder
+  ansible.builtin.file:
+    path: /data/usenet/complete
+    state: directory
+
+- name: Create Media Folder
+  ansible.builtin.file:
+    path: /data/media
+    state: directory
+
+- name: Create Torrent Folders
+  file:
+    mode: 0777
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+  loop:
+    - /data/torrents/books
+    - /data/torrents/movies
+    - /data/torrents/music
+    - /data/torrents/tv
+
+- name: Create Usenet Folders
+  file:
+    mode: 0777
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+  loop:
+    - /data/usenet/complete/books
+    - /data/usenet/complete/movies
+    - /data/usenet/complete/music
+    - /data/usenet/complete/tv
+
+- name: Create Media Folders
+  file:
+    mode: 0777
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+  loop:
+    - /data/usenet/complete/books
+    - /data/usenet/complete/movies
+    - /data/usenet/complete/music
+    - /data/usenet/complete/tv
 
 # What does this do?
 #- name: Changing Permissions of "/opt" 

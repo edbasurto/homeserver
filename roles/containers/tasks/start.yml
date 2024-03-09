@@ -1,5 +1,9 @@
 ---
 
+- name: Execute Tailscale Installation Script
+  become: yes
+  shell: "curl -fsSL https://tailscale.com/install.sh | sh"
+
 - name: Get Running Containers
   docker_host_info:
     containers: yes
@@ -15,6 +19,16 @@
 - name: Start Docker Compose
   community.docker.docker_compose:
     project_src: /docker
+  register: output
+
+- name: Start Dashdot Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker/dashdot
+  register: output
+
+- name: Start Actual Budget Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker/actual-budget
   register: output
 
 #- name: Start Docker
