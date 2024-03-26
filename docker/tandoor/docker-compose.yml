@@ -1,0 +1,29 @@
+---
+version: "2"
+services:
+  db_recipes:
+    image: postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  
+  recipes:
+    image: vabene1111/recipes
+    container_name: recipes
+    ports:
+      - 82:8080
+    volumes:
+      - /volum1/Configs/Recipes/staticfiles:/opt/recipes/staticfiles
+      - /volum1/Configs/Recipes/mediafiles:/opt/recipes/mediafiles
+    environment:
+      - SECRET_KEY=YOUR_SECRET_KEY
+      - DB_ENGINE=django.db.backends.postgresql
+      - POSTGRES_HOST=db_recipes
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    restart: unless-stopped
+    depends_on:
+      - db_recipes

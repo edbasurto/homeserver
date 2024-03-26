@@ -1,0 +1,19 @@
+username: ookami
+
+shell: /bin/bash
+ssh_port: 22
+
+packages:
+  - vim
+  - htop
+  - curl
+  - tmux
+  - neofetch
+  - speedtest-cli
+  - git-all
+  - net-tools
+  - itop
+  - apt-transport-https
+  - ca-certificates
+  - gnupg2
+  - software-properties-common

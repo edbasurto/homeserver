@@ -17,6 +17,21 @@
     src: ./docker/actual-budget/docker-compose.yml
     dest: /docker/actual-budget/docker-compose.yml
 
+- name: Copy Wiki.js Docker Compose File to Server
+  copy:
+    src: ./docker/wiki-js/docker-compose.yml
+    dest: /docker/wiki-js/docker-compose.yml
+
+- name: Copy Photoprism Docker Compose File to Server
+  copy:
+    src: ./docker/photoprism/docker-compose.yml
+    dest: /docker/photoprism/docker-compose.yml
+
+- name: Copy Tandoor Docker Compose File to Server
+  copy:
+    src: ./docker/tandoor/docker-compose.yml
+    dest: /docker/tandoor/docker-compose.yml
+
 - name: Copy Custom Homarr Logo to Server
   copy:
     src: Ookami_Logo_Transparent.png

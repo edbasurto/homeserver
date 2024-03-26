@@ -15,6 +15,21 @@
     path: /docker/actual-budget
     state: directory
 
+- name: Create Wiki.js Directory
+  ansible.builtin.file:
+    path: /docker/wiki-js
+    state: directory
+
+- name: Create Photoprism Directory
+  ansible.builtin.file:
+    path: /docker/photoprism
+    state: directory
+
+- name: Create Tandoor Directory
+  ansible.builtin.file:
+    path: /docker/tandoor
+    state: directory
+
 - name: Create Tailscale Tmp Directory
   ansible.builtin.file:
     path: /tmp/Tailscale
@@ -42,6 +57,7 @@
     - /opt/pihole/etc-pihole
     - /opt/pihole/etc-dnsmasq.d
     - /opt/actual-data
+    - /opt/wikijs
 
 - name: Create Data Folder
   ansible.builtin.file:
