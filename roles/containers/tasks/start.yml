@@ -36,15 +36,21 @@
     project_src: /docker/wiki-js
   register: output
 
-#- name: Start Photoprism Docker Compose
-#  community.docker.docker_compose:
-#    project_src: /docker/photoprism
-#  register: output
+- name: Start Photoprism Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker/photoprism
+  register: output
 
 - name: Start Tandoor Docker Compose
   community.docker.docker_compose:
     project_src: /docker/tandoor
   register: output
+
+- name: Start Mealie Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker/mealie
+  register: output
+
 
 #- name: Start Docker
 #  shell: docker-compose -f /docker/docker-compose.yml up -d

@@ -32,6 +32,11 @@
     src: ./docker/tandoor/docker-compose.yml
     dest: /docker/tandoor/docker-compose.yml
 
+- name: Copy Mealie Docker Compose File to Server
+  copy:
+    src: ./docker/mealie/docker-compose.yml
+    dest: /docker/mealie/docker-compose.yml
+
 - name: Copy Custom Homarr Logo to Server
   copy:
     src: Ookami_Logo_Transparent.png
