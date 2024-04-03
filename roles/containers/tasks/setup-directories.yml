@@ -35,6 +35,11 @@
     path: /docker/mealie
     state: directory
 
+- name: Create Jellyfin Directory
+  ansible.builtin.file:
+    path: /docker/jellyfin
+    state: directory
+
 - name: Create Tailscale Tmp Directory
   ansible.builtin.file:
     path: /tmp/Tailscale

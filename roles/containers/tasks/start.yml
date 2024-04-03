@@ -41,16 +41,23 @@
     project_src: /docker/photoprism
   register: output
 
+#- name: Start Tandoor Docker Compose
+#  community.docker.docker_compose:
+#    project_src: /docker/tandoor
+#  register: output
+
 - name: Start Tandoor Docker Compose
-  community.docker.docker_compose:
-    project_src: /docker/tandoor
-  register: output
+  shell: docker-compose -f /docker/tandoor/docker-compose.yml up -d
 
 - name: Start Mealie Docker Compose
   community.docker.docker_compose:
     project_src: /docker/mealie
   register: output
 
+#- name: Start Jellyfin Docker Compose
+#  community.docker.docker_compose:
+#    project_src: /docker/jellyfin
+#  register: output
 
 #- name: Start Docker
 #  shell: docker-compose -f /docker/docker-compose.yml up -d

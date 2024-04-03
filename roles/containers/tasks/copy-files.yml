@@ -37,6 +37,11 @@
     src: ./docker/mealie/docker-compose.yml
     dest: /docker/mealie/docker-compose.yml
 
+- name: Copy Jellyfin Docker Compose File to Server
+  copy:
+    src: ./docker/jellyfin/docker-compose.yml
+    dest: /docker/jellyfin/docker-compose.yml
+
 - name: Copy Custom Homarr Logo to Server
   copy:
     src: Ookami_Logo_Transparent.png
