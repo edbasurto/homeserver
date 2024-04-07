@@ -40,6 +40,11 @@
     path: /docker/jellyfin
     state: directory
 
+- name: Create NextCloud Directory
+  ansible.builtin.file:
+    path: /docker/nextcloud
+    state: directory
+
 - name: Create Tailscale Tmp Directory
   ansible.builtin.file:
     path: /tmp/Tailscale
@@ -69,6 +74,11 @@
     - /opt/actual-data
     - /opt/wikijs
     - /opt/mealie-data
+    - /media/drive2/jellyfin/config
+    - /media/drive2/data/usenet
+    - /media/drive2/nextcloud/appdata
+    - /media/drive2/nextcloud/data
+
 
 - name: Create Data Folder
   ansible.builtin.file:

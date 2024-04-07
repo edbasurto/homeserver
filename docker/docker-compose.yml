@@ -147,3 +147,7 @@ services:
     ports:
       - 9999:8080 
   
+#networks:
+#  network:
+#    driver: bridge
+#    name: ookami_network

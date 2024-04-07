@@ -1,24 +1,27 @@
-version: '3.5'
+version: "3"
 services:
   jellyfin:
-    image: jellyfin/jellyfin
+    image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
-    #user: uid:gid
-    network_mode: 'host'
-    volumes:
-      - /path/to/config:/config
-      - /path/to/cache:/cache
-      - type: bind
-        source: /path/to/media
-        target: /media
-      - type: bind
-        source: /path/to/media2
-        target: /media2
-        read_only: true
-    restart: 'unless-stopped'
-    # Optional - alternative address used for autodiscovery
+    devices:
+      - /dev/dri:/dev/dri
     environment:
-      - JELLYFIN_PublishedServerUrl=http://example.com
-    # Optional - may be necessary for docker healthcheck to pass if running in host network mode
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - /media/drive2/jellyfin/config:/config
+      - /media/drive2/data/usenet:/data
+    ports:
+      - 8096:8096 # Http webUI.
+      # - 8920:8920 #optional - Https webUI (you need to set up your own certificate).
+      # - 7359:7359/udp #optional - Allows clients to discover Jellyfin on the local network.
+      # - 1900:1900/udp #optional - Service discovery used by DNLA and clients.
+    restart: unless-stopped
+#    networks:
+#      - network
+
+#etworks:
+#  network:
+#    name: ookami_network
+#    external: true

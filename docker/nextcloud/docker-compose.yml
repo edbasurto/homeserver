@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud:latest
+    container_name: nextcloud
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - /media/drive2/nextcloud/appdata:/config 
+      - /media/drive2/nextcloud/data:/data
+    restart: unless-stopped
+    ports:
+      - 8989:80
+#    networks:
+#      - network 
+
+#networks:
+#  network:
+#    name: ookami_network
+#    external: true

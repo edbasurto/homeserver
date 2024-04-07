@@ -31,15 +31,15 @@
     project_src: /docker/actual-budget
   register: output
 
-- name: Start Wiki.js Docker Compose
-  community.docker.docker_compose:
-    project_src: /docker/wiki-js
-  register: output
+#- name: Start Wiki.js Docker Compose
+#  community.docker.docker_compose:
+#    project_src: /docker/wiki-js
+#  register: output
 
-- name: Start Photoprism Docker Compose
-  community.docker.docker_compose:
-    project_src: /docker/photoprism
-  register: output
+#- name: Start Photoprism Docker Compose
+#  community.docker.docker_compose:
+#    project_src: /docker/photoprism
+#  register: output
 
 #- name: Start Tandoor Docker Compose
 #  community.docker.docker_compose:
@@ -54,10 +54,15 @@
     project_src: /docker/mealie
   register: output
 
-#- name: Start Jellyfin Docker Compose
-#  community.docker.docker_compose:
-#    project_src: /docker/jellyfin
-#  register: output
+- name: Start Jellyfin Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker/jellyfin
+  register: output
+
+- name: Start NextCloud Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker/nextcloud
+  register: output
 
 #- name: Start Docker
 #  shell: docker-compose -f /docker/docker-compose.yml up -d
