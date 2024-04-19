@@ -1,3 +1,6 @@
 # Home Server
-[ookami_home]
-homeserver ansible_host=100.125.81.77 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/homeserver
+#[ookami_home]
+#homeserver ansible_host=100.125.81.77 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/homeserver
+
+[msi_server]
+msiserver ansible_host=192.168.50.229 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/msi-server

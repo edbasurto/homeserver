@@ -1,5 +1,14 @@
 ---
 
+- name: Passwordless Sudo For "{{ item }}"
+  lineinfile:
+    dest: "/etc/sudoers"
+    regexp: "^%wheel"
+    line: "{{ item }} ALL=(ALL) NOPASSWD: ALL"
+    validate: "/usr/sbin/visudo -cf %s"
+  loop:
+    - "{{ username }}"
+
 # TODO: Revisit to pin versions to avoid breaking changes.
 - name: Install System Updates
   apt:
@@ -10,6 +19,18 @@
   apt:
     name: "{{ packages }}"
     state: latest
+
+- name: Suppress Login Message (hushlogin)
+  file:
+    path: "/home/{{ item }}/.hushlogin"
+    mode: 0644
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    modification_time: preserve
+    access_time: preserve
+    state: touch
+  loop:
+    - "{{ username }}"
 
 - name: Install docker dependencies and configure repositories
   become: yes

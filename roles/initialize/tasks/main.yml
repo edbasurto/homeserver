@@ -1,6 +1,6 @@
 ---
 
 - include_tasks: setup.yml
-- name: Setup pihole
-  ansible.builtin.include_tasks: "setup-pihole.yml"
+#- name: Setup pihole
+#  ansible.builtin.include_tasks: "setup-pihole.yml"
 #- include_tasks: ssh.yml

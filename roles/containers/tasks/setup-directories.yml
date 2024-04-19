@@ -35,6 +35,11 @@
     path: /docker/mealie
     state: directory
 
+- name: Create Calibre Directory
+  ansible.builtin.file:
+    path: /docker/calibre
+    state: directory
+
 - name: Create Jellyfin Directory
   ansible.builtin.file:
     path: /docker/jellyfin
@@ -43,6 +48,11 @@
 - name: Create NextCloud Directory
   ansible.builtin.file:
     path: /docker/nextcloud
+    state: directory
+
+- name: Create Nginx Directory
+  ansible.builtin.file:
+    path: /docker/nginx
     state: directory
 
 - name: Create Tailscale Tmp Directory
@@ -76,8 +86,11 @@
     - /opt/mealie-data
     - /media/drive2/jellyfin/config
     - /media/drive2/data/usenet
-    - /media/drive2/nextcloud/appdata
-    - /media/drive2/nextcloud/data
+    - /opt/nextcloud/appdata
+    - /opt/nextcloud/data
+    - /opt/nginx/data
+    - /opt/nginx/letsencrypt
+    - /opt/calibre-data
 
 
 - name: Create Data Folder

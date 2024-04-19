@@ -14,7 +14,6 @@
     name: "{{ item }}"
     state: stopped
   loop: "{{ docker_info.containers | map(attribute='Id') | list }}"
-  
 
 - name: Start Docker Compose
   community.docker.docker_compose:
@@ -31,21 +30,23 @@
     project_src: /docker/actual-budget
   register: output
 
-#- name: Start Wiki.js Docker Compose
-#  community.docker.docker_compose:
-#    project_src: /docker/wiki-js
-#  register: output
+- name: Start Wiki.js Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker/wiki-js
+  register: output
 
-#- name: Start Photoprism Docker Compose
-#  community.docker.docker_compose:
-#    project_src: /docker/photoprism
-#  register: output
+- name: Start Photoprism Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker/photoprism
+  register: output
 
 #- name: Start Tandoor Docker Compose
 #  community.docker.docker_compose:
 #    project_src: /docker/tandoor
 #  register: output
 
+# For some reason, the above ansible command does not work for tandoor
+# Using a shell command to run Tandoor docker compose
 - name: Start Tandoor Docker Compose
   shell: docker-compose -f /docker/tandoor/docker-compose.yml up -d
 
@@ -54,15 +55,31 @@
     project_src: /docker/mealie
   register: output
 
+- name: Start Calibre Docker Compose
+  community.docker.docker_compose:
+    project_src: /docker/calibre
+  register: output
+
 - name: Start Jellyfin Docker Compose
   community.docker.docker_compose:
     project_src: /docker/jellyfin
   register: output
 
+#- name: Start NextCloud Docker Compose
+#  community.docker.docker_compose:
+#    project_src: /docker/nextcloud
+#  register: output
+
 - name: Start NextCloud Docker Compose
-  community.docker.docker_compose:
-    project_src: /docker/nextcloud
-  register: output
+  shell: docker-compose -f /docker/nextcloud/docker-compose.yml up -d
+
+#- name: Start Nginx Docker Compose
+#  community.docker.docker_compose:
+#    project_src: /docker/nginx
+#  register: output
+
+- name: Start Nginx Docker Compose
+  shell: docker-compose -f /docker/nginx/docker-compose.yml up -d
 
 #- name: Start Docker
 #  shell: docker-compose -f /docker/docker-compose.yml up -d

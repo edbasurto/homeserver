@@ -37,6 +37,11 @@
     src: ./docker/mealie/docker-compose.yml
     dest: /docker/mealie/docker-compose.yml
 
+- name: Copy Calibre Docker Compose File to Server
+  copy:
+    src: ./docker/calibre/docker-compose.yml
+    dest: /docker/calibre/docker-compose.yml
+
 - name: Copy Jellyfin Docker Compose File to Server
   copy:
     src: ./docker/jellyfin/docker-compose.yml
@@ -46,6 +51,11 @@
   copy:
     src: ./docker/nextcloud/docker-compose.yml
     dest: /docker/nextcloud/docker-compose.yml
+
+- name: Copy Nginx Docker Compose File to Server
+  copy:
+    src: ./docker/nginx/docker-compose.yml
+    dest: /docker/nginx/docker-compose.yml
 
 - name: Copy Custom Homarr Logo to Server
   copy:

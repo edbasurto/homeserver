@@ -9,13 +9,13 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - /media/drive2/nextcloud/appdata:/config 
-      - /media/drive2/nextcloud/data:/data
+      - /opt/nextcloud/appdata:/config 
+      - /opt/nextcloud/data:/data
     restart: unless-stopped
     ports:
-      - 8989:80
+      - 8389:80
 #    networks:
-#      - network 
+#      - network
 
 #networks:
 #  network:
