@@ -127,9 +127,4 @@
 
 #- name: Start Docker
 #  command: >
-<<<<<<< HEAD
 #    docker-compose -f /docker/docker-compose.yml up -d
-
-=======
-#    docker-compose -f /docker/docker-compose.yml up -d
->>>>>>> 2d7c6a1 (Temp commit before rebase)
