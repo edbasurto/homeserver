@@ -15,28 +15,40 @@
     state: stopped
   loop: "{{ docker_info.containers | map(attribute='Id') | list }}"
 
+- name: Prune Docker containers
+  become: yes
+  community.docker.docker_prune:
+    containers: yes
+
 - name: Start Docker Compose
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /docker
+    docker_host: unix:///var/run/docker.sock
   register: output
 
+- name: Start Whats Up Docker
+  community.docker.docker_compose_v2:
+    project_src: /docker/whatsupdocker
+  register: output
+  ignore_errors: true
+
 - name: Start Dashdot Docker Compose
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /docker/dashdot
   register: output
 
 - name: Start Actual Budget Docker Compose
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /docker/actual-budget
   register: output
 
 - name: Start Wiki.js Docker Compose
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /docker/wiki-js
   register: output
 
 - name: Start Photoprism Docker Compose
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /docker/photoprism
   register: output
 
@@ -51,35 +63,64 @@
   shell: docker-compose -f /docker/tandoor/docker-compose.yml up -d
 
 - name: Start Mealie Docker Compose
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /docker/mealie
   register: output
 
 - name: Start Calibre Docker Compose
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /docker/calibre
   register: output
 
 - name: Start Jellyfin Docker Compose
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: /docker/jellyfin
   register: output
 
-#- name: Start NextCloud Docker Compose
-#  community.docker.docker_compose:
-#    project_src: /docker/nextcloud
-#  register: output
-
 - name: Start NextCloud Docker Compose
-  shell: docker-compose -f /docker/nextcloud/docker-compose.yml up -d
+  community.docker.docker_compose_v2:
+    project_src: /docker/nextcloud
+  register: output
+  ignore_errors: true
 
-#- name: Start Nginx Docker Compose
-#  community.docker.docker_compose:
-#    project_src: /docker/nginx
-#  register: output
+#- name: Start NextCloud Docker Compose
+#  shell: docker-compose -f /docker/nextcloud/docker-compose.yml up -d
 
 - name: Start Nginx Docker Compose
-  shell: docker-compose -f /docker/nginx/docker-compose.yml up -d
+  community.docker.docker_compose_v2:
+    project_src: /docker/nginx
+  register: output
+
+#- name: Start Nginx Docker Compose
+#  shell: docker-compose -f /docker/nginx/docker-compose.yml up -d
+#  ignore_errors: true
+
+- name: Start Planka Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /docker/planka
+  register: output
+  when: ansible_hostname == 'ookami-server'
+
+#- name: Start Planka Tailscale Docker Compose
+#  community.docker.docker_compose_v2:
+#    project_src: /docker/planka-ts
+#  register: output
+#  when: ansible_hostname == 'ookami-server'
+
+- name: Start MeshCentral Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /docker/meshcentral
+  register: output
+  when: ansible_hostname == 'msi-server'
+
+#- name: Build Discord Music Bot
+#  shell: sudo ./repo-kawade/discord-music-bot/build.sh
+
+- name: Start Discord Music Bot
+  community.docker.docker_compose_v2:
+    project_src: /home/{{ username }}/repo-kawade/discord-music-bot
+  register: output
+  when: ansible_hostname == 'ookami-server'
 
 #- name: Start Docker
 #  shell: docker-compose -f /docker/docker-compose.yml up -d
@@ -87,3 +128,4 @@
 #- name: Start Docker
 #  command: >
 #    docker-compose -f /docker/docker-compose.yml up -d
+

@@ -7,6 +7,11 @@
     src: ./docker/docker-compose.yml
     dest: /docker/docker-compose.yml
 
+- name: Copy Whatsupdocker Docker Compose File to Server
+  copy:
+    src: ./docker/whatsupdocker/docker-compose.yml
+    dest: /docker/whatsupdocker/docker-compose.yml
+
 - name: Copy Dashdot Docker Compose File to Server
   copy:
     src: ./docker/dashdot/docker-compose.yml
@@ -56,6 +61,21 @@
   copy:
     src: ./docker/nginx/docker-compose.yml
     dest: /docker/nginx/docker-compose.yml
+
+- name: Copy Planka Docker Compose File to Server
+  copy:
+    src: ./docker/planka/docker-compose.yml
+    dest: /docker/planka/docker-compose.yml
+
+#- name: Copy Planka Tailscale Docker Compose File to Server
+#  copy:
+#    src: ./docker/planka-ts/docker-compose.yml
+#    dest: /docker/planka-ts/docker-compose.yml
+
+- name: Copy MeshCentral Docker Compose File to Server
+  copy:
+    src: ./docker/meshcentral/docker-compose.yml
+    dest: /docker/meshcentral/docker-compose.yml
 
 - name: Copy Custom Homarr Logo to Server
   copy:

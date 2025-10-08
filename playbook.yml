@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: ookami_home
   become: yes
 
   pre_tasks:
@@ -7,6 +7,7 @@
       apt:
         update_cache: true
         cache_valid_time: 3600
+
 #    - name: install net-tools
 #      apt:
 #        install: net-tools

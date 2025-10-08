@@ -12,7 +12,7 @@ services:
     image: vabene1111/recipes
     container_name: recipes
     ports:
-      - 82:8080
+      - 8282:8080
     volumes:
       - /volum1/Configs/Recipes/staticfiles:/opt/recipes/staticfiles
       - /volum1/Configs/Recipes/mediafiles:/opt/recipes/mediafiles

@@ -19,6 +19,27 @@
   apt:
     name: "{{ packages }}"
     state: latest
+  when: ansible_hostname == 'ookami-server'
+
+- name: Install PXE Netboot.xyz Essential Packages
+  apt:
+    name:
+      - ansible
+      - git
+      - apache2
+  when: ansible_hostname == 'pxe-server'
+
+- name: Clone Netboot.xyz GitHub Repository
+  git:
+    repo: https://github.com/netbootxyz/netboot.xyz.git
+    dest: /opt/netboot.xyz
+    clone: yes
+    update: yes
+  when: ansible_hostname == 'pxe-server'
+
+- name: Start PXE Netboot Service
+  ansible.builtin.command: ansible-playbook /opt/netboot.xyz/site.yml
+  when: ansible_hostname == 'pxe-server'
 
 - name: Suppress Login Message (hushlogin)
   file:
@@ -31,6 +52,22 @@
     state: touch
   loop:
     - "{{ username }}"
+  ignore_errors: true
+
+# Install requirements for community.docker.docker_compose collection
+- name: Install pip (if not already installed)
+  become: yes
+  package:
+    name: python3-pip
+    state: present
+
+- name: Install ansible dependencies using pip
+  become: yes
+  pip:
+    name: "{{ item }}"
+  with_items:
+    - ansible
+    - docker-compose
 
 - name: Install docker dependencies and configure repositories
   become: yes
@@ -50,6 +87,36 @@
       - make
     state: present
     update_cache: yes
+
+- name: Install Python libraries using pip
+  become: yes
+  pip:
+    name:
+      - requests
+      - docker
+      - docker-compose
+    state: present
+    executable: pip3  # Ensure pip for Python 3 is used
+
+- name: Install Docker SDK for Python
+  ansible.builtin.pip:
+    name: 
+      - "docker==6.1.3"
+      - "docker-compose"
+
+- name: Stop Apache2 service
+  ansible.builtin.systemd:
+    name: apache2
+    state: stopped
+    enabled: no
+  become: yes  # Use become (sudo) to run the command as root
+  when: ansible_hostname == 'ookami-server'
+
+#- name: Install Docker SDK for Python
+#  ansible.builtin.pip:
+#    name: 
+#      - "docker"
+#      - "docker-compose"
 
 #- name: Add docker GPG key
 #  become: yes
@@ -80,25 +147,7 @@
 #    state: present
 #    update_cache: yes
 
-- name: Install Python libraries using pip
-  become: yes
-  pip:
-    name:
-      - requests
-      - docker
-      - docker-compose
-    state: present
-    executable: pip3  # Ensure pip for Python 3 is used
+# Set up Netboot.xyz
+#- name: Netboot set up
 
-- name: Install Docker SDK for Python
-  ansible.builtin.pip:
-    name: 
-      - "docker==6.1.3"
-      - "docker-compose"
-
-#- name: Install Docker SDK for Python
-#  ansible.builtin.pip:
-#    name: 
-#      - "docker"
-#      - "docker-compose"
-    
+#  msi-server 192.168.50.229

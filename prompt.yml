@@ -1,0 +1,9 @@
+---
+- name: Prompt for image pull
+  ansible.builtin.pause:
+    prompt: "Do you want to pull Docker images? (yes/no)"
+  register: pull_images
+
+- name: Decision
+  ansible.builtin.include_tasks: loop_vlan_input.yml
+  when: pull_images.user_input | lower == 'yes'

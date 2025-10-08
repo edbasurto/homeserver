@@ -1,0 +1,23 @@
+---
+
+- name: Get Running Containers
+  docker_host_info:
+    containers: yes
+  register: docker_info
+
+- name: Stop Running Containers
+  docker_container:
+    name: "{{ item }}"
+    state: stopped
+  loop: "{{ docker_info.containers | map(attribute='Id') | list }}"
+
+- name: Pull Docker images
+  community.docker.docker_image_pull
+    project_src: /docker
+  register: output
+
+#- name: "pull {{ image }}:{{ image_tag }}"
+#  ansible.builtin.docker_image:
+#    name: "{{ image }}"
+#    tag: "{{ image_tag }}"
+#    source: pull

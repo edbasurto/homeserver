@@ -67,6 +67,10 @@
     state: directory
     recurse: yes
   loop:
+    - /docker/planka
+    - /docker/planka-ts
+    - /docker/meshcentral
+    - /docker/whatsupdocker
     - /opt/hass
     - /opt/portainer
     - /opt/prometheus
@@ -90,7 +94,13 @@
     - /opt/nextcloud/data
     - /opt/nginx/data
     - /opt/nginx/letsencrypt
+    - /opt/data/mysql
+    - /opt/nginx/data/mysql
+    - /opt/nginx/mysql
     - /opt/calibre-data
+    - /opt/planka
+    - /opt/planka-ts
+    - /opt/meshcentral
 
 
 - name: Create Data Folder
