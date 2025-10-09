@@ -122,6 +122,12 @@
   register: output
   when: ansible_hostname == 'ookami-server'
 
+- name: Start Discord Monitor Bot
+  community.docker.docker_compose_v2:
+    project_src: /home/{{ username }}/discord-site-monitor-bot
+  register: output
+  when: ansible_hostname == 'ookami-server'
+
 #- name: Start Docker
 #  shell: docker-compose -f /docker/docker-compose.yml up -d
 

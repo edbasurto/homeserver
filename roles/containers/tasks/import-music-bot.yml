@@ -1,5 +1,5 @@
 ---
-- name: Import "discord music bot" Repository
+- name: Import Discord Music Bot Repository
   git:
     repo: https://github.com/kawadeomkar/discord-music-bot.git
     dest: /home/{{ username }}/repo-kawade/discord-music-bot/

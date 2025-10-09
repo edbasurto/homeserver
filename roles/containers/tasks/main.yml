@@ -3,5 +3,6 @@
 - include_tasks: prompt.yml
 - include_tasks: setup-directories.yml
 - include_tasks: import-music-bot.yml
+- include_tasks: import-site-monitor-bot.yml
 - include_tasks: copy-files.yml
 - include_tasks: start.yml

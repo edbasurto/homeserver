@@ -1,0 +1,9 @@
+---
+- name: Import Discord Monitor Bot Repository
+  git:
+    repo: https://github.com/edbasurto/Discord-Site-Monitor-Bot.git
+    dest: /home/{{ username }}/discord-site-monitor-bot/
+    clone: yes
+    update: yes
+    version: master
+    force: yes
