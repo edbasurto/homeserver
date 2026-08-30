@@ -2,6 +2,10 @@
 # downloaded file
 k8s/cert-manager/cert-manager-1.4.0.yaml
 
+# macOS
+.DS_Store
+**/.DS_Store
+
 # VSCODE
 .vscode/settings.json
 
@@ -196,3 +200,16 @@ cython_debug/
 # Ed remove
 hosts
 vmhosts
+
+# Home Assistant
+docker/configs/homeassistant/home-assistant_v2.db
+docker/configs/homeassistant/home-assistant.log
+docker/configs/homeassistant/home-assistant.log.1
+docker/configs/homeassistant/deps/
+docker/configs/homeassistant/tts/
+docker/configs/homeassistant/secrets.yaml
+docker/configs/homeassistant/.storage/
+docker/configs/homeassistant/.cloud/
+docker/configs/homeassistant/.HA_VERSION
+
+.vault_pass.txt
