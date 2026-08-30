@@ -1,0 +1,357 @@
+---
+
+- name: Ensure /docker/configs exists on all Docker hosts
+  file:
+    path: /docker/configs
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: "'docker-hosts' in group_names"
+
+- name: Ensure /docker/stacks exists on all Docker hosts
+  file:
+    path: /docker/stacks
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: "'docker-hosts' in group_names"
+
+- name: Ensure stack directories exist on amaterasu
+  file:
+    path: "/docker/stacks/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - tousou-gate
+    - sunrise-mqtt-soup
+    - hyperdimension-library
+    - osaki-ni-cloud
+    - spicy-queen-ctrl
+    - neet-game
+    - warning-core
+  when: inventory_hostname == "amaterasu"
+
+- name: Ensure stack directories exist on holo
+  file:
+    path: "/docker/stacks/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - devs-talk
+    - warning-core
+  when: inventory_hostname == "holo"
+
+- name: Ensure stack directories exist on chibiterasu
+  file:
+    path: "/docker/stacks/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - good-day-so-epic
+    - warning-core
+  when: inventory_hostname == "chibiterasu"
+
+# ==============================
+# Env files — amaterasu
+# Vault vars required in host_vars/amaterasu/vault.yml:
+#   tousou-gate:             authentik_secret_key, authentik_pg_password
+#   hyperdimension-library:  immich_pg_password
+#   osaki-ni-cloud:          nextcloud_pg_password, nextcloud_admin_user, nextcloud_admin_password
+#   devs-talk:               (none — holo only)
+# ==============================
+
+- name: Write tousou-gate env file on amaterasu
+  copy:
+    dest: /docker/stacks/tousou-gate/.env.amaterasu
+    content: |
+      AUTHENTIK_SECRET_KEY={{ authentik_secret_key }}
+      AUTHENTIK_POSTGRESQL__USER=authentik
+      AUTHENTIK_POSTGRESQL__PASSWORD={{ authentik_pg_password }}
+      POSTGRES_USER=authentik
+      POSTGRES_PASSWORD={{ authentik_pg_password }}
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "amaterasu"
+
+- name: Write hyperdimension-library env file on amaterasu
+  copy:
+    dest: /docker/stacks/hyperdimension-library/.env.amaterasu
+    content: |
+      POSTGRES_USER=immich
+      POSTGRES_PASSWORD={{ immich_pg_password }}
+      DB_HOSTNAME=immich-postgres
+      DB_USERNAME=immich
+      DB_PASSWORD={{ immich_pg_password }}
+      DB_DATABASE_NAME=immich
+      REDIS_HOSTNAME=immich-redis
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "amaterasu"
+
+- name: Write osaki-ni-cloud env file on amaterasu
+  copy:
+    dest: /docker/stacks/osaki-ni-cloud/.env.amaterasu
+    content: |
+      POSTGRES_USER=nextcloud
+      POSTGRES_PASSWORD={{ nextcloud_pg_password }}
+      POSTGRES_HOST=nextcloud-postgres
+      NEXTCLOUD_ADMIN_USER={{ nextcloud_admin_user }}
+      NEXTCLOUD_ADMIN_PASSWORD={{ nextcloud_admin_password }}
+      REDIS_HOST=nextcloud-redis
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "amaterasu"
+
+- name: Write sunrise-mqtt-soup env file on amaterasu
+  copy:
+    dest: /docker/stacks/sunrise-mqtt-soup/.env.amaterasu
+    content: ""
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "amaterasu"
+
+- name: Write spicy-queen-ctrl env file on amaterasu
+  copy:
+    dest: /docker/stacks/spicy-queen-ctrl/.env.amaterasu
+    content: ""
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "amaterasu"
+
+- name: Write neet-game env file on amaterasu
+  copy:
+    dest: /docker/stacks/neet-game/.env.amaterasu
+    content: ""
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "amaterasu"
+
+- name: Write warning-core env file on amaterasu
+  copy:
+    dest: /docker/stacks/warning-core/.env.amaterasu
+    content: ""
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "amaterasu"
+
+# ==============================
+# Env files — holo
+# Vault vars required in host_vars/holo/vault.yml:
+#   devs-talk: devs_pg_password, semaphore_admin_password, planka_secret_key,
+#              semaphore_access_key_encryption
+# ==============================
+
+- name: Ensure bind-mounted config dirs exist on holo
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop:
+    # semaphore runs as uid 1001, gid 0 — needs to write /etc/semaphore/config.json
+    - { path: /docker/configs/semaphore, owner: "1001", group: "0", mode: "0770" }
+  when: inventory_hostname == "holo"
+
+- name: Write devs-talk env file on holo
+  copy:
+    dest: /docker/stacks/devs-talk/.env.holo
+    content: |
+      POSTGRES_USER=devs
+      POSTGRES_PASSWORD={{ devs_pg_password }}
+      FORGEJO__database__DB_TYPE=postgres
+      FORGEJO__database__HOST=devs-postgres:5432
+      FORGEJO__database__NAME=forgejo
+      FORGEJO__database__USER=devs
+      FORGEJO__database__PASSWD={{ devs_pg_password }}
+      SEMAPHORE_DB_DIALECT=postgres
+      SEMAPHORE_DB_HOST=devs-postgres
+      SEMAPHORE_DB_PORT=5432
+      SEMAPHORE_DB_USER=devs
+      SEMAPHORE_DB_PASS={{ devs_pg_password }}
+      SEMAPHORE_DB=semaphore
+      SEMAPHORE_ADMIN=admin
+      SEMAPHORE_ADMIN_NAME=admin
+      SEMAPHORE_ADMIN_PASSWORD={{ semaphore_admin_password }}
+      SEMAPHORE_ADMIN_EMAIL=admin@localhost
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION={{ semaphore_access_key_encryption }}
+      SEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore/
+      DATABASE_URL=postgresql://devs:{{ devs_pg_password }}@devs-postgres/planka
+      SECRET_KEY={{ planka_secret_key }}
+      DB_TYPE=postgres
+      DB_HOST=devs-postgres
+      DB_PORT=5432
+      DB_USER=devs
+      DB_PASS={{ devs_pg_password }}
+      DB_NAME=wikijs
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "holo"
+
+- name: Write warning-core env file on holo
+  copy:
+    dest: /docker/stacks/warning-core/.env.holo
+    content: ""
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "holo"
+
+# ==============================
+# Env files — chibiterasu
+# ==============================
+
+- name: Write good-day-so-epic env file on chibiterasu
+  copy:
+    dest: /docker/stacks/good-day-so-epic/.env.chibiterasu
+    content: ""
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "chibiterasu"
+
+- name: Write warning-core env file on chibiterasu
+  copy:
+    dest: /docker/stacks/warning-core/.env.chibiterasu
+    content: ""
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "chibiterasu"
+
+# ==============================
+# Discord bot .env files (Amaterasu only)
+# Vault vars required in host_vars/amaterasu/vault.yml:
+#   discord_music_bot_env, discord_monitor_bot_env
+# ==============================
+
+- name: Ensure discord-music-bot directory exists on amaterasu
+  file:
+    path: /home/{{ username }}/repo-kawade/discord-music-bot
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: "0750"
+  when: inventory_hostname == "amaterasu"
+
+- name: Write discord-music-bot .env from vault
+  copy:
+    dest: /home/{{ username }}/repo-kawade/discord-music-bot/.env
+    content: "{{ discord_music_bot_env }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: "0600"
+  when: inventory_hostname == "amaterasu"
+
+- name: Ensure discord-site-monitor-bot directory exists on amaterasu
+  file:
+    path: /home/{{ username }}/discord-site-monitor-bot
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: "0750"
+  when: inventory_hostname == "amaterasu"
+
+- name: Write discord-site-monitor-bot .env from vault
+  copy:
+    dest: /home/{{ username }}/discord-site-monitor-bot/.env
+    content: "{{ discord_monitor_bot_env }}"
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: "0600"
+  when: inventory_hostname == "amaterasu"
+
+# ==============================
+# Home Assistant config (Amaterasu only)
+# ==============================
+
+- name: Ensure Home Assistant config directory exists on Amaterasu
+  file:
+    path: /docker/configs/homeassistant
+    state: directory
+    owner: 1000
+    group: 1000
+    mode: "0750"
+  when: inventory_hostname == "amaterasu"
+
+- name: Sync Home Assistant (non-secret) config files from repo
+  copy:
+    src: "{{ playbook_dir }}/docker/configs/homeassistant/"
+    dest: "/docker/configs/homeassistant/"
+    owner: 1000
+    group: 1000
+    mode: "0644"
+  when: inventory_hostname == "amaterasu"
+
+- name: Write Home Assistant secrets.yaml from Ansible Vault
+  copy:
+    dest: /docker/configs/homeassistant/secrets.yaml
+    content: "{{ homeassistant_secrets_yaml }}"
+    owner: 1000
+    group: 1000
+    mode: "0600"
+  when:
+    - inventory_hostname == "amaterasu"
+    - homeassistant_secrets_yaml is defined
+    - homeassistant_secrets_yaml is not none
+    - homeassistant_secrets_yaml | length > 0
+
+# ==============================
+# Prometheus config (Holo only)
+# ==============================
+
+- name: Ensure prometheus config directory exists on holo
+  file:
+    path: /docker/configs/prometheus
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: inventory_hostname == "holo"
+
+- name: Sync prometheus config from repo
+  copy:
+    src: "{{ playbook_dir }}/docker/configs/prometheus/prometheus.yml"
+    dest: /docker/configs/prometheus/prometheus.yml
+    owner: root
+    group: root
+    mode: "0644"
+  when: inventory_hostname == "holo"
+
+# ==============================
+# devs-postgres init script (Holo only)
+# ==============================
+
+- name: Ensure devs-postgres config directory exists on holo
+  file:
+    path: /docker/configs/devs-postgres
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: inventory_hostname == "holo"
+
+- name: Sync devs-postgres init script from repo
+  copy:
+    src: "{{ playbook_dir }}/docker/configs/devs-postgres/init-databases.sql"
+    dest: /docker/configs/devs-postgres/init-databases.sql
+    owner: root
+    group: root
+    mode: "0644"
+  when: inventory_hostname == "holo"

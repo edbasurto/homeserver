@@ -1,83 +1,54 @@
 ---
 
-# Clean up
+# ==============================
+# Amaterasu compose files
+# ==============================
 
-- name: Copy Docker Compose File to Server
-  copy:
-    src: ./docker/docker-compose.yml
-    dest: /docker/docker-compose.yml
+- name: Copy amaterasu compose files
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/docker/stacks/{{ item }}/compose.amaterasu.yml"
+    dest: "/docker/stacks/{{ item }}/compose.amaterasu.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - tousou-gate
+    - sunrise-mqtt-soup
+    - hyperdimension-library
+    - osaki-ni-cloud
+    - spicy-queen-ctrl
+    - neet-game
+    - warning-core
+  when: inventory_hostname == "amaterasu"
 
-- name: Copy Whatsupdocker Docker Compose File to Server
-  copy:
-    src: ./docker/whatsupdocker/docker-compose.yml
-    dest: /docker/whatsupdocker/docker-compose.yml
+# ==============================
+# Holo compose files
+# ==============================
 
-- name: Copy Dashdot Docker Compose File to Server
-  copy:
-    src: ./docker/dashdot/docker-compose.yml
-    dest: /docker/dashdot/docker-compose.yml
+- name: Copy holo compose files
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/docker/stacks/{{ item }}/compose.holo.yml"
+    dest: "/docker/stacks/{{ item }}/compose.holo.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - devs-talk
+    - warning-core
+  when: inventory_hostname == "holo"
 
-- name: Copy Actual Budget Docker Compose File to Server
-  copy:
-    src: ./docker/actual-budget/docker-compose.yml
-    dest: /docker/actual-budget/docker-compose.yml
+# ==============================
+# Chibiterasu compose files
+# ==============================
 
-- name: Copy Wiki.js Docker Compose File to Server
-  copy:
-    src: ./docker/wiki-js/docker-compose.yml
-    dest: /docker/wiki-js/docker-compose.yml
-
-- name: Copy Photoprism Docker Compose File to Server
-  copy:
-    src: ./docker/photoprism/docker-compose.yml
-    dest: /docker/photoprism/docker-compose.yml
-
-- name: Copy Tandoor Docker Compose File to Server
-  copy:
-    src: ./docker/tandoor/docker-compose.yml
-    dest: /docker/tandoor/docker-compose.yml
-
-- name: Copy Mealie Docker Compose File to Server
-  copy:
-    src: ./docker/mealie/docker-compose.yml
-    dest: /docker/mealie/docker-compose.yml
-
-- name: Copy Calibre Docker Compose File to Server
-  copy:
-    src: ./docker/calibre/docker-compose.yml
-    dest: /docker/calibre/docker-compose.yml
-
-- name: Copy Jellyfin Docker Compose File to Server
-  copy:
-    src: ./docker/jellyfin/docker-compose.yml
-    dest: /docker/jellyfin/docker-compose.yml
-
-- name: Copy NextCloud Docker Compose File to Server
-  copy:
-    src: ./docker/nextcloud/docker-compose.yml
-    dest: /docker/nextcloud/docker-compose.yml
-
-- name: Copy Nginx Docker Compose File to Server
-  copy:
-    src: ./docker/nginx/docker-compose.yml
-    dest: /docker/nginx/docker-compose.yml
-
-- name: Copy Planka Docker Compose File to Server
-  copy:
-    src: ./docker/planka/docker-compose.yml
-    dest: /docker/planka/docker-compose.yml
-
-#- name: Copy Planka Tailscale Docker Compose File to Server
-#  copy:
-#    src: ./docker/planka-ts/docker-compose.yml
-#    dest: /docker/planka-ts/docker-compose.yml
-
-- name: Copy MeshCentral Docker Compose File to Server
-  copy:
-    src: ./docker/meshcentral/docker-compose.yml
-    dest: /docker/meshcentral/docker-compose.yml
-
-- name: Copy Custom Homarr Logo to Server
-  copy:
-    src: Ookami_Logo_Transparent.png
-    dest: /opt/homarr/icons/Ookami_Logo_Transparent.png
+- name: Copy chibiterasu compose files
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/docker/stacks/{{ item }}/compose.chibiterasu.yml"
+    dest: "/docker/stacks/{{ item }}/compose.chibiterasu.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - good-day-so-epic
+    - warning-core
+  when: inventory_hostname == "chibiterasu"

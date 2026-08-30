@@ -1,136 +1,92 @@
 ---
 
-- name: Execute Tailscale Installation Script
-  become: yes
-  shell: "curl -fsSL https://tailscale.com/install.sh | sh"
+# ==============================
+# Amaterasu stacks
+# tousou-gate starts first — it creates the tousou-gate_proxy network
+# that all other stacks depend on.
+# ==============================
 
-- name: Get Running Containers
-  docker_host_info:
-    containers: yes
-  register: docker_info
-
-- name: Stop Running Containers
-  docker_container:
-    name: "{{ item }}"
-    state: stopped
-  loop: "{{ docker_info.containers | map(attribute='Id') | list }}"
-
-- name: Prune Docker containers
-  become: yes
-  community.docker.docker_prune:
-    containers: yes
-
-- name: Start Docker Compose
+- name: Start tousou-gate (creates proxy network)
   community.docker.docker_compose_v2:
-    project_src: /docker
-    docker_host: unix:///var/run/docker.sock
-  register: output
+    project_src: /docker/stacks/tousou-gate
+    files:
+      - compose.amaterasu.yml
+    project_name: tousou-gate
+    state: present
+    remove_orphans: true
+  when: inventory_hostname == "amaterasu"
 
-- name: Start Whats Up Docker
+- name: Start amaterasu stacks
   community.docker.docker_compose_v2:
-    project_src: /docker/whatsupdocker
-  register: output
-  ignore_errors: true
+    project_src: "/docker/stacks/{{ item }}"
+    files:
+      - compose.amaterasu.yml
+    project_name: "{{ item }}"
+    state: present
+    remove_orphans: true
+  loop:
+    - sunrise-mqtt-soup
+    - hyperdimension-library
+    - osaki-ni-cloud
+    - spicy-queen-ctrl
+    - neet-game
+    - warning-core
+  when: inventory_hostname == "amaterasu"
 
-- name: Start Dashdot Docker Compose
+# ==============================
+# Holo stacks
+# ==============================
+
+- name: Start holo stacks
   community.docker.docker_compose_v2:
-    project_src: /docker/dashdot
-  register: output
+    project_src: "/docker/stacks/{{ item }}"
+    files:
+      - compose.holo.yml
+    project_name: "{{ item }}"
+    state: present
+  loop:
+    - devs-talk
+    - warning-core
+  when: inventory_hostname == "holo"
 
-- name: Start Actual Budget Docker Compose
+# ==============================
+# Chibiterasu stacks
+# ==============================
+
+- name: Start chibiterasu stacks
   community.docker.docker_compose_v2:
-    project_src: /docker/actual-budget
-  register: output
+    project_src: "/docker/stacks/{{ item }}"
+    files:
+      - compose.chibiterasu.yml
+    project_name: "{{ item }}"
+    state: present
+  loop:
+    - good-day-so-epic
+    - warning-core
+  when: inventory_hostname == "chibiterasu"
 
-- name: Start Wiki.js Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /docker/wiki-js
-  register: output
-
-- name: Start Photoprism Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /docker/photoprism
-  register: output
-
-#- name: Start Tandoor Docker Compose
-#  community.docker.docker_compose:
-#    project_src: /docker/tandoor
-#  register: output
-
-# For some reason, the above ansible command does not work for tandoor
-# Using a shell command to run Tandoor docker compose
-- name: Start Tandoor Docker Compose
-  shell: docker-compose -f /docker/tandoor/docker-compose.yml up -d
-
-- name: Start Mealie Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /docker/mealie
-  register: output
-
-- name: Start Calibre Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /docker/calibre
-  register: output
-
-- name: Start Jellyfin Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /docker/jellyfin
-  register: output
-
-- name: Start NextCloud Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /docker/nextcloud
-  register: output
-  ignore_errors: true
-
-#- name: Start NextCloud Docker Compose
-#  shell: docker-compose -f /docker/nextcloud/docker-compose.yml up -d
-
-- name: Start Nginx Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /docker/nginx
-  register: output
-
-#- name: Start Nginx Docker Compose
-#  shell: docker-compose -f /docker/nginx/docker-compose.yml up -d
-#  ignore_errors: true
-
-- name: Start Planka Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /docker/planka
-  register: output
-  when: ansible_hostname == 'ookami-server'
-
-#- name: Start Planka Tailscale Docker Compose
-#  community.docker.docker_compose_v2:
-#    project_src: /docker/planka-ts
-#  register: output
-#  when: ansible_hostname == 'ookami-server'
-
-- name: Start MeshCentral Docker Compose
-  community.docker.docker_compose_v2:
-    project_src: /docker/meshcentral
-  register: output
-  when: ansible_hostname == 'msi-server'
-
-#- name: Build Discord Music Bot
-#  shell: sudo ./repo-kawade/discord-music-bot/build.sh
+# ==============================
+# Discord bots (amaterasu only)
+# NOTE: .env files for these bots live on the host and are NOT managed by
+# Ansible — back them up manually before wiping amaterasu.
+# ==============================
 
 - name: Start Discord Music Bot
   community.docker.docker_compose_v2:
     project_src: /home/{{ username }}/repo-kawade/discord-music-bot
-  register: output
-  when: ansible_hostname == 'ookami-server'
+  register: music_bot_output
+  when: inventory_hostname == 'amaterasu'
 
-- name: Start Discord Monitor Bot
-  community.docker.docker_compose_v2:
-    project_src: /home/{{ username }}/discord-site-monitor-bot
-  register: output
-  when: ansible_hostname == 'ookami-server'
+- debug:
+    var: music_bot_output
+  when: inventory_hostname == 'amaterasu'
 
-#- name: Start Docker
-#  shell: docker-compose -f /docker/docker-compose.yml up -d
+#- name: Start Discord Monitor Bot
+#  community.docker.docker_compose_v2:
+#    project_src: /home/{{ username }}/discord-site-monitor-bot
+#  register: monitor_bot_output
+#  when: ansible_hostname == 'amaterasu'
+#  ignore_errors: true
 
-#- name: Start Docker
-#  command: >
-#    docker-compose -f /docker/docker-compose.yml up -d
+#- debug:
+#    var: monitor_bot_output

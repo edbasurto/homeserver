@@ -7,3 +7,4 @@
     update: yes
     version: master
     force: yes
+  when: ansible_hostname == 'amaterasu'

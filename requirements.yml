@@ -1,8 +1,14 @@
-# Install geerlingguy.docker
-- src: geerlingguy.docker
-#---
-#roles:
-#  - name: geerlingguy.docker
-#    version: 7.0.2
+# Install:
+#   ansible-galaxy install -r requirements.yml            (roles)
+#   ansible-galaxy collection install -r requirements.yml  (collections)
+#
+# Note: geerlingguy.docker is also vendored in ./roles/ (roles_path wins),
+# so the role entry below is a convenience for fresh control nodes.
 
-# ansible-galaxy install -r requirements.yml
+roles:
+  - name: geerlingguy.docker
+    version: 7.0.2
+
+collections:
+  - name: community.docker
+    version: ">=3.10.0"
