@@ -1,0 +1,87 @@
+name: spicy-queen-ctrl
+
+services:
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "spicy-queen-ctrl"
+      com.ookami.service: "homarr"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /docker/configs/homarr:/app/data/configs
+      - homarr_data:/data
+    networks:
+      - default
+      - proxy
+    ports:
+      - "7575:7575"
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "spicy-queen-ctrl"
+      com.ookami.service: "portainer"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - default
+      - proxy
+    ports:
+      - "9000:9000"
+
+  whatsupdocker:
+    image: fmartinou/whats-up-docker:latest
+    container_name: whatsupdocker
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "spicy-queen-ctrl"
+      com.ookami.service: "whatsupdocker"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    environment:
+      - TZ=America/Los_Angeles
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - whatsupdocker_data:/app/config
+    networks:
+      - default
+      - proxy
+    ports:
+      - "3333:3000"
+
+  actual-budget:
+    image: docker.io/actualbudget/actual-server:latest
+    container_name: actual-budget
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "spicy-queen-ctrl"
+      com.ookami.service: "actual-budget"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    volumes:
+      - actual-budget_data:/data
+    networks:
+      - default
+      - proxy
+    ports:
+      - "5006:5006"
+
+volumes:
+  homarr_data:
+  portainer_data:
+  whatsupdocker_data:
+  actual-budget_data:
+
+networks:
+  proxy:
+    external: true
+    name: tousou-gate_proxy

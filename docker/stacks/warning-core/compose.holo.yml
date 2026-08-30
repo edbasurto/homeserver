@@ -1,0 +1,129 @@
+name: warning-core
+
+# Core services (prometheus, grafana) + agents (node-exporter, cadvisor, dozzle, dashdot)
+# Only holo runs core. For agents-only on other hosts, see compose.amaterasu.yml / compose.chibiterasu.yml
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "prometheus"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - /docker/configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - default
+      - proxy
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "grafana"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - default
+      - proxy
+    ports:
+      - "2000:3000"
+
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "node-exporter"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    command:
+      - --path.rootfs=/host
+    pid: host
+    network_mode: host
+    volumes:
+      - /:/host:ro,rslave
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "cadvisor"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - default
+    ports:
+      - "8080:8080"
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "dozzle"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - default
+      - proxy
+    ports:
+      - "9999:8080"
+
+  dashdot:
+    image: mauricenino/dashdot:latest
+    container_name: dashdot
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "dashdot"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    privileged: true
+    environment:
+      - TZ=America/Los_Angeles
+    volumes:
+      - /:/mnt/host:ro
+    networks:
+      - default
+      - proxy
+    ports:
+      - "3002:3001"
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  # holo has no tousou-gate/Traefik; local bridge until cross-host routing exists
+  proxy:
+    driver: bridge

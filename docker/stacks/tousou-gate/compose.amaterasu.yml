@@ -1,0 +1,110 @@
+name: tousou-gate
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "tousou-gate"
+      com.ookami.service: "traefik"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=tousou-gate_proxy
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --api.dashboard=true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /docker/configs/traefik:/etc/traefik
+      - traefik-certs_data:/certs
+    networks:
+      - proxy
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: authentik-server
+    restart: unless-stopped
+    command: server
+    labels:
+      com.ookami.stack: "tousou-gate"
+      com.ookami.service: "authentik-server"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    depends_on:
+      - authentik-postgres
+      - authentik-redis
+    env_file: .env.amaterasu
+    volumes:
+      - /docker/configs/authentik/media:/media
+      - /docker/configs/authentik/templates:/templates
+    networks:
+      - default
+      - proxy
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: authentik-worker
+    restart: unless-stopped
+    command: worker
+    labels:
+      com.ookami.stack: "tousou-gate"
+      com.ookami.service: "authentik-worker"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    depends_on:
+      - authentik-postgres
+      - authentik-redis
+    env_file: .env.amaterasu
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /docker/configs/authentik/media:/media
+      - /docker/configs/authentik/certs:/certs
+      - /docker/configs/authentik/templates:/templates
+    networks:
+      - default
+
+  authentik-postgres:
+    image: postgres:15-alpine
+    container_name: authentik-postgres
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "tousou-gate"
+      com.ookami.service: "authentik-postgres"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    env_file: .env.amaterasu
+    environment:
+      POSTGRES_DB: authentik
+    volumes:
+      - authentik-postgres_data:/var/lib/postgresql/data
+    networks:
+      - default
+
+  authentik-redis:
+    image: redis:7-alpine
+    container_name: authentik-redis
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "tousou-gate"
+      com.ookami.service: "authentik-redis"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    networks:
+      - default
+
+volumes:
+  traefik-certs_data:
+  authentik-postgres_data:
+
+# tousou-gate owns and creates the shared proxy network.
+# All other stacks reference it as: external: true, name: tousou-gate_proxy
+networks:
+  proxy:
+    name: tousou-gate_proxy

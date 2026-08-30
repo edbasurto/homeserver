@@ -1,0 +1,5 @@
+name: good-day-so-epic
+
+# Intentionally undefined — sandbox for experiments on Chibiterasu.
+# Add and remove services freely here. Do not promote patterns to production by default.
+# This stack may publish ports directly and skip Traefik routing.

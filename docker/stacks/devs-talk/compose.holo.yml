@@ -1,0 +1,169 @@
+name: devs-talk
+
+services:
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: code-server
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "devs-talk"
+      com.ookami.service: "code-server"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    env_file: .env.holo
+    volumes:
+      - /docker/configs/code-server:/config
+      - code-server_data:/home/coder/workspace
+    networks:
+      - default
+      - proxy
+    ports:
+      - "8443:8443"
+
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:16
+    container_name: forgejo
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "devs-talk"
+      com.ookami.service: "forgejo"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    depends_on:
+      - devs-postgres
+    env_file: .env.holo
+    volumes:
+      - /docker/configs/forgejo:/etc/gitea
+      - forgejo_data:/data
+    networks:
+      - default
+      - proxy
+    ports:
+      - "3000:3000"
+      - "2222:22"
+
+  semaphore:
+    image: semaphoreui/semaphore:latest
+    container_name: semaphore
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "devs-talk"
+      com.ookami.service: "semaphore"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    depends_on:
+      - devs-postgres
+    env_file: .env.holo
+    volumes:
+      - /docker/configs/semaphore:/etc/semaphore
+      - semaphore_data:/tmp/semaphore
+    networks:
+      - default
+      - proxy
+    ports:
+      - "3010:3000"
+
+  planka:
+    image: ghcr.io/plankanban/planka:latest
+    container_name: planka
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "devs-talk"
+      com.ookami.service: "planka"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    depends_on:
+      - devs-postgres
+    env_file: .env.holo
+    volumes:
+      - planka_data:/app/public/user-avatars
+      - planka-attachments_data:/app/private/attachments
+    networks:
+      - default
+      - proxy
+    ports:
+      - "1337:1337"
+
+  wiki:
+    image: ghcr.io/requarks/wiki:2
+    container_name: wiki
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "devs-talk"
+      com.ookami.service: "wiki"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    depends_on:
+      - devs-postgres
+    env_file: .env.holo
+    networks:
+      - default
+      - proxy
+    ports:
+      - "4500:3000"
+
+  meshcentral:
+    image: typhonragewind/meshcentral:mongodb-latest
+    container_name: meshcentral
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "devs-talk"
+      com.ookami.service: "meshcentral"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    depends_on:
+      - meshcentral-mongodb
+    env_file: .env.holo
+    volumes:
+      - /docker/configs/meshcentral:/opt/meshcentral/meshcentral-data
+      - meshcentral_data:/opt/meshcentral/meshcentral-files
+    networks:
+      - default
+      - proxy
+    ports:
+      - "8086:443"
+
+  devs-postgres:
+    image: postgres:15-alpine
+    container_name: devs-postgres
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "devs-talk"
+      com.ookami.service: "devs-postgres"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    env_file: .env.holo
+    volumes:
+      - devs-postgres_data:/var/lib/postgresql/data
+      - /docker/configs/devs-postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    networks:
+      - default
+
+  meshcentral-mongodb:
+    image: mongo:latest
+    container_name: meshcentral-mongodb
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "devs-talk"
+      com.ookami.service: "meshcentral-mongodb"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "dev"
+    volumes:
+      - meshcentral-mongodb_data:/data/db
+    networks:
+      - default
+
+volumes:
+  code-server_data:
+  forgejo_data:
+  semaphore_data:
+  planka_data:
+  planka-attachments_data:
+  devs-postgres_data:
+  meshcentral_data:
+  meshcentral-mongodb_data:
+
+networks:
+  # holo has no tousou-gate/Traefik; local bridge until cross-host routing exists
+  proxy:
+    driver: bridge

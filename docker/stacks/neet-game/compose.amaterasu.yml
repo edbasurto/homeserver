@@ -1,0 +1,22 @@
+name: neet-game
+
+services:
+  minecraft:
+    image: itzg/minecraft-server:latest
+    container_name: minecraft
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "neet-game"
+      com.ookami.service: "minecraft"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    env_file: .env.amaterasu
+    environment:
+      - EULA=TRUE
+    volumes:
+      - minecraft_data:/data
+    ports:
+      - "25565:25565"
+
+volumes:
+  minecraft_data:

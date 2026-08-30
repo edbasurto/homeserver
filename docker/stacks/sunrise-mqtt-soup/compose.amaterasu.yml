@@ -1,0 +1,38 @@
+name: sunrise-mqtt-soup
+
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    labels:
+      com.ookami.stack: "sunrise-mqtt-soup"
+      com.ookami.service: "homeassistant"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    volumes:
+      - /docker/configs/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "sunrise-mqtt-soup"
+      com.ookami.service: "mosquitto"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    volumes:
+      - /docker/configs/mosquitto:/mosquitto/config:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:

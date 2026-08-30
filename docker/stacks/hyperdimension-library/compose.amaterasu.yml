@@ -1,0 +1,153 @@
+name: hyperdimension-library
+
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "jellyfin"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - /docker/configs/jellyfin:/config
+      - jellyfin_data:/data
+    networks:
+      - default
+      - proxy
+    ports:
+      - "8096:8096"
+
+  calibre:
+    image: lscr.io/linuxserver/calibre:latest
+    container_name: calibre
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "calibre"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - /docker/configs/calibre:/config
+      - calibre_data:/books
+    networks:
+      - default
+      - proxy
+    ports:
+      - "8585:8080"
+      - "8787:8181"
+      - "8587:8081"
+
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:release
+    container_name: immich-server
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "immich-server"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    depends_on:
+      - immich-postgres
+      - immich-redis
+    env_file: .env.amaterasu
+    volumes:
+      - immich_data:/usr/src/app/upload
+    networks:
+      - default
+      - proxy
+    ports:
+      - "2283:2283"
+
+  immich-ml:
+    image: ghcr.io/immich-app/immich-machine-learning:release
+    container_name: immich-ml
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "immich-ml"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    volumes:
+      - immich-ml_data:/cache
+    networks:
+      - default
+
+  immich-postgres:
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    container_name: immich-postgres
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "immich-postgres"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    env_file: .env.amaterasu
+    environment:
+      POSTGRES_DB: immich
+    volumes:
+      - immich-postgres_data:/var/lib/postgresql/data
+    networks:
+      - default
+
+  immich-redis:
+    image: redis:6.2-alpine
+    container_name: immich-redis
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "immich-redis"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    networks:
+      - default
+
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    container_name: mealie
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "mealie"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    env_file: .env.amaterasu
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+      - MAX_WORKERS=1
+      - WEB_CONCURRENCY=1
+    volumes:
+      - mealie_data:/app/data
+    networks:
+      - default
+      - proxy
+    ports:
+      - "9925:9000"
+
+volumes:
+  jellyfin_data:
+  calibre_data:
+  immich_data:
+  immich-ml_data:
+  immich-postgres_data:
+  mealie_data:
+
+networks:
+  proxy:
+    external: true
+    name: tousou-gate_proxy
