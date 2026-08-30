@@ -1,3 +1,8 @@
+# Homelab environment name — umbrella identity for the whole fleet.
+# Orthogonal to hosts (wolf deities) and stacks (HANABIE songs).
+# Used for: Semaphore project name, DNS zone (*.johto.lan), tag/label prefixes.
+homelab_env: johto
+
 username: ookami
 # nrusername: nonroot
 shell: /usr/bin/bash
