@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # node-exporter — all hosts (uses host network, reachable by LAN IP)
+  - job_name: node-exporter
+    static_configs:
+      - targets: ['192.168.50.65:9100']
+        labels: {host: holo}
+      - targets: ['192.168.50.180:9100']
+        labels: {host: amaterasu}
+      - targets: ['192.168.50.170:9100']
+        labels: {host: chibiterasu}
+
+  # cadvisor — holo uses container name (same Docker network); others by LAN IP
+  - job_name: cadvisor
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels: {host: holo}
+      - targets: ['192.168.50.180:8080']
+        labels: {host: amaterasu}
+      - targets: ['192.168.50.170:8080']
+        labels: {host: chibiterasu}
