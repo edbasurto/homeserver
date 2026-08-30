@@ -1,5 +1,6 @@
 ---
-- hosts: ookami_home
+- name: Base docker setup
+  hosts: docker-hosts
   become: yes
 
   pre_tasks:
@@ -7,17 +8,43 @@
       apt:
         update_cache: true
         cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+    
+    - name: Ensure git is installed on Debian/Ubuntu hosts
+      ansible.builtin.apt:
+        name: git
+        state: present
+      when: ansible_pkg_mgr == "apt"
+
+  roles:
+    - initialize
+
+- name: Install and configure Docker on Docker hosts
+  hosts: docker-hosts
+  become: yes
+
+  roles:
+    - geerlingguy.docker
+
+- name: Sync Docker service configs
+  hosts: docker-hosts
+  become: yes
+
+  roles:
+    - container-configs
+
+- name: Deploy Docker stacks/containers
+  hosts: docker-hosts
+  become: yes
+
+  roles:
+    - containers
 
 #    - name: install net-tools
 #      apt:
 #        install: net-tools
 
 # add "apt install net-tools" to pre-tasks
-
-  roles:
-    - initialize
-    - geerlingguy.docker
-    - containers
 
 # run playbook:
 # $ ansible-playbook -K playbook.yml

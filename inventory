@@ -1,6 +1,36 @@
-# Home Server
-[ookami_home]
-homeserver ansible_host=192.168.50.249 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/homeserver
+# Active Docker hosts — managed by Docker playbooks
+[docker-hosts]
+amaterasu   ansible_host=192.168.50.180 ansible_user=ookami ansible_connection=ssh   ansible_ssh_private_key_file=~/.ssh/amaterasu
+holo        ansible_host=127.0.0.1      ansible_user=ookami ansible_connection=local
+chibiterasu ansible_host=192.168.50.170 ansible_user=ookami ansible_connection=ssh   ansible_ssh_private_key_file=~/.ssh/chibiterasu
 
-[pxe_server]
-pxeserver ansible_host=192.168.50.106 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/pxe-server
+[app_hosts]
+amaterasu
+
+[infra_hosts]
+holo
+
+[staging_hosts]
+chibiterasu
+
+# NAS / storage hosts — not managed by Docker playbooks
+[nas_hosts]
+sif  ansible_host=192.168.50.249 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/sif
+
+# Future K3s cluster nodes (hostnames TBD; using placeholder names until assigned)
+[k3s_nodes]
+tsume   ansible_host=192.168.50.65  ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/tsume
+zinogre ansible_host=192.168.50.151 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/moro
+
+# Powered off / no active role
+#abuelobo  ansible_host=192.168.50.11 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/abuelobo
+
+#[rpi]
+#geri   ansible_host=192.168.50. ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/
+#freki  ansible_host=192.168.50. ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/
+
+[ubuntu:children]
+docker-hosts
+
+[linux_hosts:children]
+docker-hosts

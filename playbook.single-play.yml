@@ -1,0 +1,17 @@
+---
+- name: Full homelab setup on Docker hosts
+  hosts: docker-hosts
+  become: yes
+
+  pre_tasks:
+    - name: Update apt cache on Debian/Ubuntu
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+  roles:
+    - initialize
+    - geerlingguy.docker
+    - container-configs
+    - containers
