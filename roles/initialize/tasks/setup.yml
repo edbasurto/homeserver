@@ -68,6 +68,10 @@
       - docker-compose
     state: present
     executable: pip3
+    # Ubuntu 23.04+/24.04 marks the system Python as externally-managed (PEP 668)
+    # and refuses a plain pip install; omit the flag on older releases where
+    # pip doesn't recognize it at all.
+    break_system_packages: "{{ true if ansible_distribution_version is version('23.04', '>=') else omit }}"
 
 #- name: Log in to Docker Hub
 #  community.docker.docker_login:
