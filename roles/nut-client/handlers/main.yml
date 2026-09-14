@@ -1,0 +1,6 @@
+---
+
+- name: restart nut-monitor
+  systemd:
+    name: nut-monitor
+    state: restarted

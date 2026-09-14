@@ -1,0 +1,34 @@
+---
+
+- name: Install NUT client packages
+  apt:
+    name: nut-client
+    state: present
+    update_cache: yes
+
+- name: Set NUT client mode (network client, not a server)
+  lineinfile:
+    path: /etc/nut/nut.conf
+    regexp: '^MODE='
+    line: 'MODE=netclient'
+    create: yes
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Point upsmon at the NUT server on kutone
+  lineinfile:
+    path: /etc/nut/upsmon.conf
+    regexp: '^MONITOR '
+    line: "MONITOR {{ nut_ups_name }}@{{ nut_server_host }} 1 upsmon {{ nut_monitor_password }} slave"
+    create: yes
+    owner: root
+    group: nut
+    mode: "0640"
+  notify: restart nut-monitor
+
+- name: Ensure nut-monitor is enabled and running
+  systemd:
+    name: nut-monitor
+    enabled: yes
+    state: started

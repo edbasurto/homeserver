@@ -40,6 +40,13 @@
   roles:
     - containers
 
+- name: Configure NUT UPS monitoring (client)
+  hosts: docker-hosts
+  become: yes
+
+  roles:
+    - nut-client
+
 #    - name: install net-tools
 #      apt:
 #        install: net-tools
