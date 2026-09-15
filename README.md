@@ -7,6 +7,7 @@ A self-hosted homelab, provisioned end-to-end with Ansible and run entirely in D
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-22.04%20%7C%2024.04-E95420?logo=ubuntu&logoColor=white)
 ![Traefik](https://img.shields.io/badge/Traefik-v3-24A1C1?logo=traefikproxy&logoColor=white)
 ![Status](https://img.shields.io/badge/status-in%20progress-yellow)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 

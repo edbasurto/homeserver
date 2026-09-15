@@ -157,15 +157,12 @@ Decided: **replace Holo.** Reasoning:
 Migration itself has not started as of 2026-09-14 — this is a decision, not
 yet an execution.
 
-### GPU: Quadro P620 in Amaterasu, not the Quadro M2000
-The M2000 (Maxwell) was the original Jellyfin-transcode plan but is no longer
-in the picture at all — it was borrowed from a friend and has been returned.
+### GPU: Quadro P620 in Amaterasu
 The P330 Tiny's GPU (confirmed via physical inspection: Quadro P620, Pascal,
-2GB, ~40W, slot-powered) was pulled and installed in Amaterasu instead.
-Pascal adds real HEVC decode (10/12-bit) that Maxwell has zero HEVC support
-for at all, so this isn't a downgrade from the original plan — it's a
-genuine upgrade that happened to arrive via different hardware than expected.
-Installed with a 3D-printed full-size PETG bracket (the card came out of the
+2GB, ~40W, slot-powered) was pulled and installed in Amaterasu for Jellyfin
+hardware transcoding. Pascal supports real HEVC decode (10/12-bit), which
+matters for modern 4K/HDR media libraries. Installed with a 3D-printed
+full-size PETG bracket (the card came out of the
 P330 in a low-profile bracket). Card is physically present but inert —
 drivers/nvidia-container-toolkit/Jellyfin passthrough are not configured and
 won't be until hyperdimension-library actually deploys to Amaterasu.

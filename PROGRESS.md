@@ -93,7 +93,7 @@ Both directions work now:
 
 ## UPS / Power Monitoring (NUT) — Kutone
 
-- **Hardware**: CyberPower PR1500LCDRTXL2U (ex-work, colleague gave Ed a spare when it was
+- **Hardware**: CyberPower PR1500LCDRTXL2U (ex-work, a colleague gave me a spare when it was
   swapped out). No RMCARD (network card) installed — base unit is USB + DB9 serial only.
 - **Batteries**: current ones are old/worn — `battery.charge` reads `0`, `ups.status` shows the
   `LB` (low battery) flag even while on utility power and charging. This isn't a NUT bug — it's
@@ -158,7 +158,7 @@ Both directions work now:
   MS-series hardware), reverting to native IOS-XE could be realistic, since base switching
   functionality on Catalyst platforms isn't actually license-enforced even when the DNA
   entitlement is missing/expired. **Still need the exact model numbers to know which case
-  applies** — deferred, Ed to check later.
+  applies** — deferred, I'll check later.
 
 ---
 
@@ -167,12 +167,10 @@ Both directions work now:
 - **P330 Tiny** (ThinkStation, ex-work e-waste): won't boot on a 65W supply *with* its GPU
   installed; stable on 65W with the GPU removed. Ordering a 135W Lenovo brick as headroom/spare
   regardless. GPU confirmed via physical inspection: **Nvidia Quadro P620** (2GB, Pascal).
-- **GPU decision**: pulled the P620 and installed it in **Amaterasu**, physically done tonight
-  (3D-printed full-size PETG bracket, confirmed fit). The previously-planned Quadro M2000
-  (Maxwell) is **out of the picture entirely** — Ed returned it to the friend who lent it.
-  Pascal (P620) adds real HEVC decode capability (10/12-bit) that Maxwell has zero HEVC support
-  for at all — a genuine upgrade, not a lateral move. Card is inert until hyperdimension-library
-  actually deploys and drivers/passthrough get configured.
+- **GPU decision**: pulled the P620 from the P330 and installed it in **Amaterasu**, physically
+  done tonight (3D-printed full-size PETG bracket, confirmed fit). Pascal (P620) supports real
+  HEVC decode (10/12-bit) for Jellyfin hardware transcoding. Card is inert until
+  hyperdimension-library actually deploys and drivers/passthrough get configured.
 - **P330 chassis decision**: becomes the new **Holo**, not a new Chibiterasu and not a Phase 2
   K3s control plane (both considered and rejected — see DECISIONS.md). Migration itself hasn't
   started; best time to do it is while devs-talk/Semaphore data is still only ~2 weeks old and
