@@ -105,7 +105,6 @@ Both directions work now:
   ~$10 cheaper than 4 singles, ~2 week ship once ordered). Validated against a free alternative
   (a friend's Tripp Lite SMART1500LCD) — rejected because that unit's fan runs constantly/loudly
   by design, confirmed across multiple sources, which is literally why the friend gave it away.
-  Same bedroom-noise dealbreaker as the Catalyst 4500-X call below.
 - **NUT server**: Kutone (Raspberry Pi 3B+), Ubuntu Server 24.04.5 LTS. `usbhid-ups` driver,
   confirmed exact hardware match via `lsusb` (`0764:0601`, self-identifies as PR1500LCDRT2U —
   shared USB HID identity across the whole RT2U/XL2U family). Hit one real setup issue: the UPS
@@ -136,29 +135,6 @@ Both directions work now:
     its unreachability turned out to be a loose/misseated Ethernet cable, unrelated to the switch.
   - Current topology: Xfinity modem → ASUS RT-AX88U → 3850 (Te1/1/4). ASUS is standing in as
     the WiFi AP too (no dedicated AP yet).
-- **Cisco Catalyst 4500-X**: evaluated and rejected as a 3850 replacement. No copper ports at
-  all (pure SFP+/SFP), and fan behavior is binary off/loud with no variable speed and no proven
-  quiet-mod path — a dealbreaker for a bedroom rack. Shelved for a future non-bedroom location.
-- **Cisco Catalyst 9300-48P** (pulled from work e-waste, single PSU): evaluated as a 3850
-  swap. Same port config as the installed 3850 (48× 1G copper PoE+ on both units — no multigig,
-  since this SKU isn't the `UXM` variant), so no real capability gain. The 9300's fan noise is
-  temperature- and PSU-count-dependent (single PSU = loud, dual PSU = near-silent; more spare
-  PSUs are available from the same e-waste pull), so noise isn't an automatic blocker like the
-  4500-X — but swapping would mean redoing all the just-verified VLAN/uplink work on unfamiliar,
-  unverified hardware and rack-fit, for a platform-generation upgrade that isn't urgent.
-  **Decision: keep the 3850 for now**, hold the 9300 as a strong spare for something new later
-  (Phase 2 K3s switching, or a second switch elsewhere) rather than a replacement.
-- **Meraki switches** (also pulled from work e-waste): checked whether they're usable without a
-  paid Cisco license. For true MS-series hardware, no — Meraki devices need an active cloud
-  license to pass traffic at all; after roughly a 30-day grace period with no valid license,
-  traffic stops, not just cloud management. "Convert back to native IOS-XE" is not a free
-  community hack — it's an official Cisco process that still requires purchasing a Smart
-  License or DNA entitlement. Exception worth checking: if these are actually Catalyst
-  switches that were *optionally* running in Meraki cloud-management mode (not dedicated
-  MS-series hardware), reverting to native IOS-XE could be realistic, since base switching
-  functionality on Catalyst platforms isn't actually license-enforced even when the DNA
-  entitlement is missing/expired. **Still need the exact model numbers to know which case
-  applies** — deferred, I'll check later.
 
 ---
 
@@ -221,4 +197,3 @@ Still needs: `authentik_secret_key`, `authentik_pg_password`, `immich_pg_passwor
 - [ ] M700, 3x NUC, and permanent switch hostnames: **TBD**
 - [ ] Permanent switch: Zyxel XMG1915-10E (~$170-190) is top candidate
 - [ ] Discord bot for Semaphore alerts (deferred idea, replaces Telegram)
-- [ ] Check exact model numbers on the e-wasted Meraki switches
