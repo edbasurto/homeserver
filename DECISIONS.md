@@ -121,3 +121,137 @@ homelab configuration.
 ### Amaterasu IP
 Amaterasu's LAN IP is `192.168.50.180`. This is reflected in the Prometheus
 scrape config and inventory. (Was briefly .179 before correction.)
+
+### Holo's IP changed from .125 to .65
+.125 is the *old* box (a Lenovo ThinkCentre M910s) that was already live under
+the name "holo" (via Tailscale) when this whole consolidation effort started —
+that was legacy/accidental, not a deliberate hardware choice. The real Holo is
+an Intel NUC7i5BNK at `.65`. The old M910s was renamed **Sif** and is the
+migration source for a future NAS rebuild, not a competing Holo candidate.
+
+### P330 Tiny becomes the new Holo — not Chibiterasu, not a K3s control plane
+Three options were weighed for this ex-work e-waste box (i7-8700T, 6c/12t,
+32GB RAM): replace Holo, replace Chibiterasu (M920q), or hold it for the
+Phase 2 K3s control plane ("M700," still unsourced).
+
+Decided: **replace Holo.** Reasoning:
+- Role-fit beats raw spec: Holo carries continuous, growing load (Ansible
+  control plane, Semaphore CI/CD, Forgejo, Postgres/Mongo, monitoring for the
+  whole fleet). Chibiterasu is a *deliberately disposable* pre-prod smoke-test
+  box, torn down and rebuilt routinely — the least demanding role in the
+  fleet, not the one that deserves the best hardware, even though the M920q is
+  plausibly closer in raw spec to the P330 than the NUC is.
+- Timing: best time to migrate is now, while devs-talk's data (Forgejo repos,
+  Wiki pages, Semaphore project config, Planka boards) is only ~2 weeks old
+  and nearly empty — migration cost (pg_dump/restore, mongodump/restore,
+  config copy) is close to zero today and only grows the longer Holo runs.
+- Domino effect: the freed NUC7i5BNK's CPU (`i5-7260U`) is the *exact* chip
+  already planned for "3x NUC i5-7260U workers" in the Phase 2 K3s plan
+  (confirmed via Intel's own spec sheet) — nothing sits idle, no new purchase
+  needed for one of those three workers.
+- The K3s-control-plane option was rejected only because Phase 2 isn't
+  current work (Phase 1 isn't done yet) — the P330 would sit mostly idle
+  waiting on a phase that hasn't started, while Holo runs thin on hardware
+  for its *current*, actively-growing workload in the meantime.
+
+Migration itself has not started as of 2026-09-14 — this is a decision, not
+yet an execution.
+
+### GPU: Quadro P620 in Amaterasu, not the Quadro M2000
+The M2000 (Maxwell) was the original Jellyfin-transcode plan but is no longer
+in the picture at all — it was borrowed from a friend and has been returned.
+The P330 Tiny's GPU (confirmed via physical inspection: Quadro P620, Pascal,
+2GB, ~40W, slot-powered) was pulled and installed in Amaterasu instead.
+Pascal adds real HEVC decode (10/12-bit) that Maxwell has zero HEVC support
+for at all, so this isn't a downgrade from the original plan — it's a
+genuine upgrade that happened to arrive via different hardware than expected.
+Installed with a 3D-printed full-size PETG bracket (the card came out of the
+P330 in a low-profile bracket). Card is physically present but inert —
+drivers/nvidia-container-toolkit/Jellyfin passthrough are not configured and
+won't be until hyperdimension-library actually deploys to Amaterasu.
+
+---
+
+## Networking Hardware
+
+### Catalyst 3850 kept over the 4500-X, the 9300, and a free Tripp Lite UPS
+All four of these hardware decisions turned on the same constraint: **the
+rack lives in Ed's bedroom, so anything with fans that can't be made quiet is
+disqualified regardless of capability.**
+
+- **Catalyst 4500-X**: rejected outright. No copper ports at all (pure
+  SFP+/SFP aggregation switch — would need copper SFP+ modules just to plug
+  in existing 1GbE gear), and its fans are binary off/loud with no variable
+  speed and no community-proven quiet-mod path, unlike the 3850 which has a
+  documented Noctua fan-swap guide. Shelved for a future non-bedroom location.
+- **Catalyst 9300-48P** (single PSU, pulled from work e-waste): same port
+  configuration as the already-installed 3850-48P — both are plain 1G copper
+  PoE+, no multigig on this SKU — so there's no capability gain to justify a
+  swap. The 9300's fan noise is genuinely fixable (loud on one PSU, near-
+  silent on two — more spares are available from the same e-waste pull), so
+  it isn't a hard blocker the way the 4500-X was, but redoing the
+  just-verified VLAN/uplink work on unverified hardware, for a
+  platform-generation upgrade that isn't urgent, wasn't worth it tonight.
+  Kept as a strong spare for something *new* (Phase 2 K3s switching, or a
+  second switch elsewhere) rather than a replacement for something that just
+  started working.
+- **Tripp Lite SMART1500LCD UPS** (free from a friend, "basically new"
+  batteries): rejected as a CyberPower replacement for the same reason as the
+  4500-X — its fan runs constantly and loudly by design, confirmed across
+  multiple independent sources, which is literally why the friend was giving
+  it away. A UPS running a 24/7 fan next to where Ed sleeps isn't worth the
+  free batteries. Kept as a possible spare for a future non-bedroom UPS need.
+
+### Meraki e-waste — licensing is a real wall for true MS-series hardware
+Checked whether Meraki switches pulled from work e-waste could be used
+without paying Cisco for a license. For dedicated MS-series hardware, no:
+Meraki devices need an active cloud license to pass traffic at all (not just
+lose management) after roughly a 30-day grace period, and "converting back to
+native IOS-XE" is not a free community workaround — it's an official
+Cisco-support-mediated process that still requires a paid Smart License or
+DNA entitlement. The one open exception: if these specific units are Catalyst
+switches that were *optionally* running in Meraki cloud-management mode
+(rather than dedicated MS-series hardware), reverting to native IOS-XE could
+be realistic, since base Catalyst switching functionality isn't actually
+enforced even with a missing/expired DNA entitlement (same finding as the
+9300 licensing check above). Exact model numbers still needed to know which
+case applies — not yet checked.
+
+---
+
+## UPS / Power Monitoring (NUT)
+
+### NUT on a dedicated Pi, not on Holo
+Considered running the NUT server directly on Holo instead of buying/using a
+separate device. Decided on a dedicated Raspberry Pi 3B+ (named **Kutone**,
+after Chibiterasu's companion spirit in Ōkamiden) because:
+- Holo is also the box that gets touched most (Ansible runs, Docker restarts,
+  Semaphore deploys) — coupling "the thing that must reliably warn everyone
+  before a real outage" to "the thing that's mid-changed most often" is a bad
+  pairing for something safety-critical.
+- Power budget: a Pi draws single-digit watts vs. a loaded NUC; if something
+  needs to be the last device standing during an outage, low power draw
+  matters.
+- Ed already had spare Pi 3B+ units — zero additional cost either way.
+
+### Kutone's power source — and why fixing it is deliberately on hold
+Kutone's own power must come from the UPS's **Critical**-labeled (battery-
+backed) outlet bank, confirmed via CyberPower's own documentation — not a
+regular wall outlet, or it loses power at the same instant as everything it's
+supposed to warn.
+
+As of 2026-09-14 it's still on a wall outlet. This is **deliberate, not
+forgotten**: the UPS's current batteries are old enough that `battery.charge`
+reads effectively 0% and the low-battery flag is set even while charging on
+utility power — meaning on a real outage right now, the whole UPS shuts off
+almost immediately regardless of which outlet anything is plugged into.
+Moving Kutone's power now wouldn't meaningfully protect it yet. The actual
+fix — new batteries — is funds-gated; moving Kutone's power becomes the
+priority again once those batteries are in.
+
+### CyberPower over a free Tripp Lite, batteries over a full swap
+See the Networking Hardware section above — same reasoning family, repeated
+here because it's fundamentally a power-monitoring decision: the free UPS's
+constant fan noise disqualified it for a bedroom install, so the $90 battery
+purchase for the already-owned CyberPower unit is the right spend even though
+it isn't free.
