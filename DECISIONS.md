@@ -182,7 +182,6 @@ after Chibiterasu's companion spirit in Ōkamiden) because:
 - Power budget: a Pi draws single-digit watts vs. a loaded NUC; if something
   needs to be the last device standing during an outage, low power draw
   matters.
-- Ed already had spare Pi 3B+ units — zero additional cost either way.
 
 ### Kutone's power source — and why fixing it is deliberately on hold
 Kutone's own power must come from the UPS's **Critical**-labeled (battery-
