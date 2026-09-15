@@ -53,6 +53,10 @@
 # Chibiterasu stacks
 # ==============================
 
+# good-day-so-epic is intentionally an empty sandbox (see DECISIONS.md) — its
+# compose file defines no services by design, so `docker compose up` has
+# nothing to start and errors with "no service selected". Not Ansible-managed
+# until Ed actually adds something to it; start it manually at that point.
 - name: Start chibiterasu stacks
   community.docker.docker_compose_v2:
     project_src: "/docker/stacks/{{ item }}"
@@ -61,7 +65,6 @@
     project_name: "{{ item }}"
     state: present
   loop:
-    - good-day-so-epic
     - warning-core
   when: inventory_hostname == "chibiterasu"
 
