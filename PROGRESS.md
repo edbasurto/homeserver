@@ -102,9 +102,9 @@ Both directions work now:
   batteries, the UPS effectively shuts off almost immediately on an actual outage** — replacing
   them is a real priority, not just tidiness.
 - **Batteries on order (pending funds)**: 4× Mighty Max 12V/9AH, as two dual-packs (~$90 total,
-  ~$10 cheaper than 4 singles, ~2 week ship once ordered). Validated against a free alternative
-  (a friend's Tripp Lite SMART1500LCD) — rejected because that unit's fan runs constantly/loudly
-  by design, confirmed across multiple sources, which is literally why the friend gave it away.
+  ~$10 cheaper than 4 singles, ~2 week ship once ordered). A free Tripp Lite SMART1500LCD was
+  considered as an alternative and rejected — its fan runs constantly/loudly by design,
+  confirmed across multiple sources.
 - **NUT server**: Kutone (Raspberry Pi 3B+), Ubuntu Server 24.04.5 LTS. `usbhid-ups` driver,
   confirmed exact hardware match via `lsusb` (`0764:0601`, self-identifies as PR1500LCDRT2U —
   shared USB HID identity across the whole RT2U/XL2U family). Hit one real setup issue: the UPS
