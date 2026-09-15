@@ -10,6 +10,7 @@ shell: /usr/bin/bash
 # NUT (Network UPS Tools) — kutone runs the server, docker-hosts run upsmon clients.
 # nut_server_host and nut_monitor_password (vault) still need to be set.
 nut_ups_name: cyberpower
+nut_server_host: 192.168.50.12
 
 packages:
   - vim
