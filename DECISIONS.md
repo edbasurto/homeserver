@@ -198,11 +198,3 @@ almost immediately regardless of which outlet anything is plugged into.
 Moving Kutone's power now wouldn't meaningfully protect it yet. The actual
 fix — new batteries — is funds-gated; moving Kutone's power becomes the
 priority again once those batteries are in.
-
-### CyberPower over a free Tripp Lite, batteries over a full swap
-A free Tripp Lite SMART1500LCD with "basically new" batteries was considered
-as an alternative to buying new batteries for the existing CyberPower unit —
-rejected because its fan runs constantly and loudly by design, confirmed
-across multiple independent sources. A UPS running a 24/7 fan next to where
-Ed sleeps isn't worth the free batteries, so the $90 battery purchase for the
-already-owned CyberPower unit is the right spend even though it isn't free.
