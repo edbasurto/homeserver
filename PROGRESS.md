@@ -155,14 +155,17 @@ Both directions work now:
 
 ## What Still Needs to Happen
 
-### Vault Vars Still Needed (amaterasu only — holo's vault is complete)
+### Vault Vars — amaterasu (checked 2026-09-15, mostly already set)
+
+Only `discord_monitor_bot_env` still needs real values (currently placeholder) —
+everything else (`authentik_secret_key`, `authentik_pg_password`, `immich_pg_password`,
+`nextcloud_pg_password`, `nextcloud_admin_user`, `nextcloud_admin_password`,
+`discord_music_bot_env`) is already populated. `homeassistant_secrets_yaml` is empty,
+which is fine — it's optional and the role skips writing it if unset.
 
 ```bash
 ansible-vault edit host_vars/amaterasu/vault.yml
 ```
-Still needs: `authentik_secret_key`, `authentik_pg_password`, `immich_pg_password`,
-`nextcloud_pg_password`, `nextcloud_admin_user`, `nextcloud_admin_password`,
-`homeassistant_secrets_yaml` (optional), `discord_music_bot_env`, `discord_monitor_bot_env`.
 
 ### Deployment Order (unchanged, still the right sequence)
 
