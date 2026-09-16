@@ -8,18 +8,18 @@ Environment name: **Johto** (Semaphore project, tag prefixes, future DNS zone)
 
 ---
 
-## Device Reference (current as of 2026-09-14)
+## Device Reference (current as of 2026-09-15)
 
 | Hostname | Hardware | Role | IP | Status |
 |---|---|---|---|---|
-| Amaterasu | MSI Z590 PRO WiFi | Production Docker host | 192.168.50.180 | **Live on the OLD legacy stack.** New stack-based deploy not yet run (blocked on vault vars). Quadro P620 physically installed tonight, inert until Jellyfin transcode is wired up. |
-| Holo | Intel NUC7i5BNK (i5-7260U) | Ansible control plane + monitoring | 192.168.50.65 | **Fully deployed and verified.** devs-talk + warning-core running. Decided (not yet executed): role migrates to the P330 Tiny; this NUC then becomes a Phase 2 K3s worker. |
-| Chibiterasu | ThinkCentre M920q | Staging | 192.168.50.170 | Not yet deployed. Meant to validate before Amaterasu — hasn't happened yet. |
+| Amaterasu | MSI Z590 PRO WiFi | Production Docker host | 192.168.50.180 | **Fully deployed and verified.** Already running the new stack-based architecture (mapped it out before touching anything — turned out to be further along than assumed, just one orphaned leftover service, which was removed). All 7 canonical stacks confirmed up and healthy. Quadro P620 physically installed, inert until Jellyfin transcode is wired up. |
+| Holo | Intel NUC7i5BNK (i5-7260U) | Ansible control plane + monitoring | 192.168.50.65 | **Fully deployed and verified.** devs-talk + warning-core running. Staying put for now — the planned migration to the P330 Tiny is on hold (see below). |
+| Chibiterasu | ThinkCentre M920q | Staging | 192.168.50.170 | **Fully deployed and verified.** warning-core (agents) running. RAM temporarily at 16GB (a second stick is earmarked but not installed yet). |
 | Kutone | Raspberry Pi 3B+ | NUT server (UPS monitoring) | 192.168.50.12 | **Live, verified.** Ubuntu Server 24.04.5 LTS. Still powered from a wall outlet, not the UPS itself (see Open Items). |
 | Lycagon | ASRock Z490M-ITX/ac | OPNsense edge router (not configured) | — | QSFP+ NIC installed, needs a QSA adapter for 10G to the switch. Switch side is ready now — this is the next actionable physical task. |
 | Fenrir | Synology RS815 | NAS (DSM) | — | Existing, stable, outside the active migration. |
 | Sif | ThinkCentre M910s | Migration source → future NAS | 192.168.50.125 | Still running the OLD flat pre-consolidation stack. To be wiped and rebuilt (Ubuntu, not TrueNAS) once Amaterasu/Holo are fully cut over. |
-| P330 Tiny | i7-8700T (6c/12t), 32GB RAM | **Incoming** — decided to become the new Holo | — | GPU (Quadro P620) already pulled and moved to Amaterasu. Chassis role decided, migration not started. Ubuntu 24.04.5 LTS chosen. |
+| P330 Tiny | i7-8700T (6c/12t), 32GB RAM | **On hold** | — | Hit an intermittent boot/POST reliability issue during testing (unresolved). Pulled the Quadro P620 out of it and moved that into Amaterasu regardless — the chassis itself is set aside for now rather than a blocker on anything else moving forward. |
 
 ---
 
@@ -36,17 +36,17 @@ replaced with a stack-based Ansible-managed structure:
 
 | Stack | Host | Services | Status |
 |---|---|---|---|
-| tousou-gate | amaterasu | Traefik v3, Authentik + postgres + redis | Not deployed |
-| sunrise-mqtt-soup | amaterasu | Home Assistant, Mosquitto | Not deployed |
-| hyperdimension-library | amaterasu | Jellyfin, Calibre, Immich, Mealie | Not deployed |
-| osaki-ni-cloud | amaterasu | Nextcloud + postgres + redis | Not deployed |
-| spicy-queen-ctrl | amaterasu | Homarr, Portainer, WhatUpDocker, Actual Budget | Not deployed |
-| neet-game | amaterasu | Minecraft | Not deployed |
-| warning-core | amaterasu | node-exporter, cadvisor, dozzle, dashdot (agents only) | Not deployed |
+| tousou-gate | amaterasu | Traefik v3, Authentik + postgres + redis | **Live** |
+| sunrise-mqtt-soup | amaterasu | Home Assistant, Mosquitto | **Live** |
+| hyperdimension-library | amaterasu | Jellyfin, Calibre, Immich, Mealie | **Live** |
+| osaki-ni-cloud | amaterasu | Nextcloud + postgres + redis | **Live** |
+| spicy-queen-ctrl | amaterasu | Homarr, Portainer, WhatUpDocker, Actual Budget | **Live** |
+| neet-game | amaterasu | Minecraft | **Live** |
+| warning-core | amaterasu | node-exporter, cadvisor, dozzle, dashdot (agents only) | **Live** |
 | devs-talk | holo | Semaphore, Forgejo, code-server, Planka, Wiki.js, MeshCentral + shared postgres + mongodb | **Live** |
 | warning-core | holo | Prometheus, Grafana (core) + agents | **Live** |
-| good-day-so-epic | chibiterasu | (sandbox — intentionally empty) | Not deployed |
-| warning-core | chibiterasu | node-exporter, cadvisor, dozzle, dashdot (agents only) | Not deployed |
+| good-day-so-epic | chibiterasu | (sandbox — intentionally empty) | **Live** (empty by design) |
+| warning-core | chibiterasu | node-exporter, cadvisor, dozzle, dashdot (agents only) | **Live** |
 
 ### Ansible Roles
 - **initialize** — system packages, pip deps, sudo setup. Now handles Ubuntu 24.04's PEP 668
@@ -57,8 +57,8 @@ replaced with a stack-based Ansible-managed structure:
 - **containers** — copies compose files, starts stacks in correct order
 - **nut-client** (new) — installs `nut-client`, sets `MODE=netclient`, points `upsmon` at
   Kutone's NUT server as a slave monitor. Tagged `nut-client` so it can run standalone. Applied
-  to `docker-hosts` in the playbook, but only actually run against holo so far (deliberately —
-  amaterasu/chibiterasu haven't had their own full deploy yet).
+  to `docker-hosts` in the playbook — confirmed active on all three hosts now (holo, chibiterasu,
+  amaterasu all connecting to Kutone).
 
 ### Inventory (`inventory`)
 - Group: `[docker-hosts]` — amaterasu, holo (local), chibiterasu
@@ -138,54 +138,52 @@ Both directions work now:
 
 ## GPU / Hardware Pipeline
 
-- **P330 Tiny** (ThinkStation, ex-work e-waste): won't boot on a 65W supply *with* its GPU
-  installed; stable on 65W with the GPU removed. Ordering a 135W Lenovo brick as headroom/spare
-  regardless. GPU confirmed via physical inspection: **Nvidia Quadro P620** (2GB, Pascal).
-- **GPU decision**: pulled the P620 from the P330 and installed it in **Amaterasu**, physically
-  done tonight (3D-printed full-size PETG bracket, confirmed fit). Pascal (P620) supports real
-  HEVC decode (10/12-bit) for Jellyfin hardware transcoding. Card is inert until
-  hyperdimension-library actually deploys and drivers/passthrough get configured.
-- **P330 chassis decision**: becomes the new **Holo**, not a new Chibiterasu and not a Phase 2
-  K3s control plane (both considered and rejected — see DECISIONS.md). Migration itself hasn't
-  started; best time to do it is while devs-talk/Semaphore data is still only ~2 weeks old and
-  cheap to move. The freed NUC7i5BNK then becomes one of the three planned Phase 2 K3s workers
-  — exact CPU match (`i5-7260U`), confirmed via Intel's own spec sheet.
+- **GPU**: pulled a **Nvidia Quadro P620** (2GB, Pascal) out of the P330 Tiny and installed it in
+  **Amaterasu**, using a 3D-printed full-size PETG bracket (confirmed fit). Pascal supports real
+  HEVC decode (10/12-bit) for Jellyfin hardware transcoding. Card is physically installed but
+  inert — drivers/nvidia-container-toolkit/Jellyfin passthrough aren't configured yet.
+- **P330 Tiny**: hit an intermittent boot/POST reliability issue during hardware testing —
+  after certain restarts it fails to POST at all (no display, host unreachable), recoverable
+  only by a full AC unplug/replug. Tested across two different power adapters; the issue tracked
+  with the board itself, not the adapter. **Unresolved, and set aside for now** — the P620 win
+  is banked regardless, and chasing this further isn't worth delaying UPS batteries and getting
+  Chibiterasu/Amaterasu on the new architecture, which are the actual priorities. Holo stays on
+  the NUC until/unless this gets revisited.
 
 ---
 
 ## What Still Needs to Happen
 
-### Vault Vars — amaterasu (checked 2026-09-15, mostly already set)
+### Vault Vars — amaterasu (all set as of 2026-09-15)
 
-Only `discord_monitor_bot_env` still needs real values (currently placeholder) —
-everything else (`authentik_secret_key`, `authentik_pg_password`, `immich_pg_password`,
+All required vars (`authentik_secret_key`, `authentik_pg_password`, `immich_pg_password`,
 `nextcloud_pg_password`, `nextcloud_admin_user`, `nextcloud_admin_password`,
-`discord_music_bot_env`) is already populated. `homeassistant_secrets_yaml` is empty,
-which is fine — it's optional and the role skips writing it if unset.
+`discord_music_bot_env`, `discord_monitor_bot_env`) are populated. `homeassistant_secrets_yaml`
+is empty, which is fine — it's optional and the role skips writing it if unset.
 
 ```bash
 ansible-vault edit host_vars/amaterasu/vault.yml
 ```
 
-### Deployment Order (unchanged, still the right sequence)
+### Deployment Order — all three hosts done
 
 1. ~~SSH to holo → run playbook --limit holo~~ **DONE** — devs-talk + warning-core live, verified
-2. `ansible-playbook playbook.yml --limit chibiterasu` — **not yet done.** Validates
-   good-day-so-epic + warning-core-agents without touching production. Should happen before
-   Amaterasu, per the original plan — hasn't been skipped, just hasn't happened yet.
-3. `ansible-playbook playbook.yml --limit amaterasu` — **blocked** on the vault vars above, and
-   on Amaterasu being a live production migration (not a greenfield install) — see DECISIONS.md
-   for the full reasoning on why this isn't a "just run it" step.
+2. ~~`ansible-playbook playbook.yml --limit chibiterasu`~~ **DONE** — warning-core (agents) live,
+   verified
+3. ~~`ansible-playbook playbook.yml --limit amaterasu`~~ **DONE** — mapped out Amaterasu's actual
+   state first (it was already substantially on the new architecture, not the old flat stack as
+   assumed), removed one orphaned leftover service and some dead compose files, then ran the
+   real reconciliation deploy. Caught and fixed a genuine pre-existing gap in the process:
+   `mosquitto` had never had a config file (bind-mounted a directory that stayed empty since the
+   stack was created) — added `docker/configs/mosquitto/mosquitto.conf` and a sync task, now
+   stable.
 
 ### Remaining Phase 1 Items
-- [ ] Populate Amaterasu's remaining vault vars
-- [ ] Deploy chibiterasu (staging validation)
-- [ ] Deploy amaterasu (production migration — real risk, see DECISIONS.md)
 - [ ] Configure Lycagon (OPNsense) — switch side is ready now, this is the next physical task
 - [ ] Transfer DHCP from ASUS RT-AX88U to Lycagon
 - [ ] Swap UPS batteries (funds-gated) — then move Kutone's power to the UPS's Critical outlets
-- [ ] Migrate Holo's role onto the P330 (decided, not started)
 - [ ] Configure Jellyfin GPU passthrough for the P620 once hyperdimension-library deploys
+- [ ] Decide what (if anything) to do with the P330 chassis — currently on hold, see above
 
 ### Known Open Items
 - [ ] Traefik dashboard is exposed without auth — add Authentik middleware before going live
@@ -195,6 +193,9 @@ ansible-vault edit host_vars/amaterasu/vault.yml
       SSH outright before Semaphore can actually drive deploys.
 - [ ] Inventory cleanup: `sif` line still points at the dead `.249`; `tsume`/`zinogre` k3s
       placeholders are stale
+- [ ] A handful of old/unused directories are still sitting on Amaterasu outside the managed
+      stacks (leftover from before the migration) — not touched, just noted for a future cleanup
+      pass
 - [ ] M700, 3x NUC, and permanent switch hostnames: **TBD**
 - [ ] Permanent switch: Zyxel XMG1915-10E (~$170-190) is top candidate
 - [ ] Discord bot for Semaphore alerts (deferred idea, replaces Telegram)
