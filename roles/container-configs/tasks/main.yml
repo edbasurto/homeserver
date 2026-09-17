@@ -62,7 +62,8 @@
 # ==============================
 # Env files — amaterasu
 # Vault vars required in host_vars/amaterasu/vault.yml:
-#   tousou-gate:             authentik_secret_key, authentik_pg_password
+#   tousou-gate:             authentik_secret_key, authentik_pg_password,
+#                            cloudflare_tunnel_token
 #   hyperdimension-library:  immich_pg_password
 #   osaki-ni-cloud:          nextcloud_pg_password, nextcloud_admin_user, nextcloud_admin_password
 #   devs-talk:               (none — holo only)
@@ -77,6 +78,7 @@
       AUTHENTIK_POSTGRESQL__PASSWORD={{ authentik_pg_password }}
       POSTGRES_USER=authentik
       POSTGRES_PASSWORD={{ authentik_pg_password }}
+      TUNNEL_TOKEN={{ cloudflare_tunnel_token }}
     owner: root
     group: root
     mode: "0600"

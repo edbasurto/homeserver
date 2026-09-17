@@ -61,6 +61,33 @@ must never be deployed to amaterasu or chibiterasu.
 The old our-7days-restore stack used MariaDB. The baseline specifies postgres.
 It was updated when the stack was migrated to osaki-ni-cloud.
 
+### Remote access via Cloudflare Tunnel, not port-forwarding
+`ookami.casa` is managed on Cloudflare, and the existing root A record points
+at Amaterasu's LAN IP (192.168.50.180, DNS-only/unproxied) — that only ever
+resolved usefully from inside the LAN, it was never reachable from outside.
+
+Decided: use a Cloudflare Tunnel (`cloudflared`) rather than forwarding a
+port on the router. Reasoning:
+- No inbound port needed on the router at all — works today on the ASUS
+  unchanged, and keeps working once Lycagon replaces it, with zero
+  re-configuration either time.
+- Home WAN IP is never exposed; `cloudflared` only makes outbound
+  connections to Cloudflare's edge.
+- Cloudflare terminates public TLS for the tunneled hostname — no ACME
+  setup needed on Traefik's side for this.
+
+`cloudflared` runs as a service in `tousou-gate` (added 2026-09-16, first
+consumer: `immich.ookami.casa` → `immich-server:2283`), attached only to the
+`proxy` network — not `tousou-gate_proxy`'s sibling `default` network — so it
+can resolve `immich-server` by Docker DNS without also reaching
+authentik-postgres or anything else on tousou-gate's internal network.
+Routing to Immich goes directly to the container for now, not through
+Traefik — Immich already has its own login, unlike the Traefik dashboard
+(still unauthenticated — see the open item below). Revisit routing everything
+through Traefik + Authentik uniformly once that middleware actually exists.
+Public hostname mapping is configured in Cloudflare's dashboard (tunnel
+ingress rules), not in a local `cloudflared` config file.
+
 ### mosquitto had no config file — fixed
 `sunrise-mqtt-soup`'s mosquitto has bind-mounted `/docker/configs/mosquitto`
 since the stack was created, but no task ever wrote a `mosquitto.conf` there
