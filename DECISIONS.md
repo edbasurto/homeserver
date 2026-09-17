@@ -61,6 +61,42 @@ must never be deployed to amaterasu or chibiterasu.
 The old our-7days-restore stack used MariaDB. The baseline specifies postgres.
 It was updated when the stack was migrated to osaki-ni-cloud.
 
+### Remote access via Cloudflare Tunnel, not port-forwarding
+`ookami.casa` is managed on Cloudflare, and the existing root A record points
+at Amaterasu's LAN IP (192.168.50.180, DNS-only/unproxied) — that only ever
+resolved usefully from inside the LAN, it was never reachable from outside.
+
+Decided: use a Cloudflare Tunnel (`cloudflared`) rather than forwarding a
+port on the router. Reasoning:
+- No inbound port needed on the router at all — works today on the ASUS
+  unchanged, and keeps working once Lycagon replaces it, with zero
+  re-configuration either time.
+- Home WAN IP is never exposed; `cloudflared` only makes outbound
+  connections to Cloudflare's edge.
+- Cloudflare terminates public TLS for the tunneled hostname — no ACME
+  setup needed on Traefik's side for this.
+
+`cloudflared` runs as a service in `tousou-gate` (added 2026-09-16, first
+consumer: `immich.ookami.casa` → `immich-server:2283`), attached only to the
+`proxy` network — not `tousou-gate_proxy`'s sibling `default` network — so it
+can resolve `immich-server` by Docker DNS without also reaching
+authentik-postgres or anything else on tousou-gate's internal network.
+Routing to Immich goes directly to the container for now, not through
+Traefik — Immich already has its own login, unlike the Traefik dashboard
+(still unauthenticated — see the open item below). Revisit routing everything
+through Traefik + Authentik uniformly once that middleware actually exists.
+Public hostname mapping is configured in Cloudflare's dashboard (tunnel
+ingress rules), not in a local `cloudflared` config file.
+
+### mosquitto had no config file — fixed
+`sunrise-mqtt-soup`'s mosquitto has bind-mounted `/docker/configs/mosquitto`
+since the stack was created, but no task ever wrote a `mosquitto.conf` there
+and none existed in the repo — it had been crash-looping (or simply never
+running) the whole time. Added `docker/configs/mosquitto/mosquitto.conf`
+(listeners on 1883 + 9001/websockets, persistence on, `allow_anonymous true`
+since this is LAN-only with no auth configured yet) and a sync task in
+`container-configs`, following the same pattern as prometheus/devs-postgres.
+
 ### good-day-so-epic is intentionally empty
 The sandbox stack on chibiterasu has no pinned services by design. Add and
 remove services freely for experiments. Do not promote patterns from here to
@@ -80,6 +116,13 @@ the playbook from a Mac will cause holo's tasks to execute on the Mac instead.
 1. SSH to holo manually → run `ansible-playbook playbook.yml --limit holo`
 2. Once Semaphore is up on holo, all future runs go through it
 3. `--limit chibiterasu` first to validate, then `--limit amaterasu`
+
+All three hosts are deployed as of 2026-09-15. Before running the Amaterasu
+deploy, mapped out its actual running state first rather than assuming — it
+turned out to already be substantially on the new stack-based architecture,
+not the old flat stack. Worth the extra step: it changed the deploy from "big
+risky migration" to "small reconciliation plus removing one orphaned leftover
+service."
 
 ### Vagrant uses a separate inventory
 `inventory.vagrant` exists for testing with a local VM. The main `ansible.cfg`
@@ -129,33 +172,25 @@ that was legacy/accidental, not a deliberate hardware choice. The real Holo is
 an Intel NUC7i5BNK at `.65`. The old M910s was renamed **Sif** and is the
 migration source for a future NAS rebuild, not a competing Holo candidate.
 
-### P330 Tiny becomes the new Holo — not Chibiterasu, not a K3s control plane
-Three options were weighed for this ex-work e-waste box (i7-8700T, 6c/12t,
-32GB RAM): replace Holo, replace Chibiterasu (M920q), or hold it for the
-Phase 2 K3s control plane ("M700," still unsourced).
+### P330 Tiny — set aside for now
+Was weighing this box (i7-8700T, 6c/12t, 32GB RAM) as a replacement for Holo,
+reasoning that its role-fit (continuous, growing load — Ansible control
+plane, Semaphore CI/CD, Forgejo, Postgres/Mongo, fleet monitoring) beats raw
+spec comparisons with Chibiterasu or holding it for a future K3s control
+plane.
 
-Decided: **replace Holo.** Reasoning:
-- Role-fit beats raw spec: Holo carries continuous, growing load (Ansible
-  control plane, Semaphore CI/CD, Forgejo, Postgres/Mongo, monitoring for the
-  whole fleet). Chibiterasu is a *deliberately disposable* pre-prod smoke-test
-  box, torn down and rebuilt routinely — the least demanding role in the
-  fleet, not the one that deserves the best hardware, even though the M920q is
-  plausibly closer in raw spec to the P330 than the NUC is.
-- Timing: best time to migrate is now, while devs-talk's data (Forgejo repos,
-  Wiki pages, Semaphore project config, Planka boards) is only ~2 weeks old
-  and nearly empty — migration cost (pg_dump/restore, mongodump/restore,
-  config copy) is close to zero today and only grows the longer Holo runs.
-- Domino effect: the freed NUC7i5BNK's CPU (`i5-7260U`) is the *exact* chip
-  already planned for "3x NUC i5-7260U workers" in the Phase 2 K3s plan
-  (confirmed via Intel's own spec sheet) — nothing sits idle, no new purchase
-  needed for one of those three workers.
-- The K3s-control-plane option was rejected only because Phase 2 isn't
-  current work (Phase 1 isn't done yet) — the P330 would sit mostly idle
-  waiting on a phase that hasn't started, while Holo runs thin on hardware
-  for its *current*, actively-growing workload in the meantime.
+That plan is on hold. During hardware testing the P330 turned up an
+intermittent boot/POST reliability issue — after certain restarts it fails to
+POST at all (no display, host unreachable), only recoverable with a full AC
+unplug/replug. Tested across two different power adapters and traced it to
+the board itself, not the adapter. Root cause still unknown.
 
-Migration itself has not started as of 2026-09-14 — this is a decision, not
-yet an execution.
+Decided: **don't chase this further right now.** The GPU (Quadro P620) was
+already pulled out of it and is a clean win regardless of what happens to the
+chassis — no reason to hold that up. Continuing to debug an intermittent,
+hard-to-reproduce fault isn't worth delaying UPS batteries or getting
+Chibiterasu/Amaterasu onto the new architecture, which matter more right now.
+Holo stays on the NUC7i5BNK until/unless this gets revisited.
 
 ### GPU: Quadro P620 in Amaterasu
 The P330 Tiny's GPU (confirmed via physical inspection: Quadro P620, Pascal,
