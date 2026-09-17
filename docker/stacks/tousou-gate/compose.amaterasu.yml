@@ -108,7 +108,7 @@ services:
       com.ookami.service: "cloudflared"
       com.ookami.owner: "homelab"
       com.ookami.environment: "prod"
-    command: tunnel --no-autoupdate --protocol http2 --loglevel debug run
+    command: tunnel --no-autoupdate --protocol http2 --edge-ip-version 4 --loglevel debug run
     env_file: .env.amaterasu
     networks:
       - proxy
