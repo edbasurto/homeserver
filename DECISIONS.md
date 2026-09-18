@@ -61,32 +61,40 @@ must never be deployed to amaterasu or chibiterasu.
 The old our-7days-restore stack used MariaDB. The baseline specifies postgres.
 It was updated when the stack was migrated to osaki-ni-cloud.
 
-### Remote access via Cloudflare Tunnel, not port-forwarding
+### Remote access via Cloudflare Tunnel — tried, reverted 2026-09-17
 `ookami.casa` is managed on Cloudflare, and the existing root A record points
 at Amaterasu's LAN IP (192.168.50.180, DNS-only/unproxied) — that only ever
 resolved usefully from inside the LAN, it was never reachable from outside.
 
-Decided: use a Cloudflare Tunnel (`cloudflared`) rather than forwarding a
-port on the router. Reasoning:
-- No inbound port needed on the router at all — works today on the ASUS
-  unchanged, and keeps working once Lycagon replaces it, with zero
-  re-configuration either time.
-- Home WAN IP is never exposed; `cloudflared` only makes outbound
-  connections to Cloudflare's edge.
-- Cloudflare terminates public TLS for the tunneled hostname — no ACME
-  setup needed on Traefik's side for this.
+Tried a Cloudflare Tunnel (`cloudflared`) rather than forwarding a port on
+the router, for the usual reasons: no inbound port needed on the router,
+home WAN IP never exposed, Cloudflare terminates public TLS. Ran as a
+service in `tousou-gate`, routing `immich.ookami.casa` directly to
+`immich-server:2283`.
 
-`cloudflared` runs as a service in `tousou-gate` (added 2026-09-16, first
-consumer: `immich.ookami.casa` → `immich-server:2283`), attached only to the
-`proxy` network — not `tousou-gate_proxy`'s sibling `default` network — so it
-can resolve `immich-server` by Docker DNS without also reaching
-authentik-postgres or anything else on tousou-gate's internal network.
-Routing to Immich goes directly to the container for now, not through
-Traefik — Immich already has its own login, unlike the Traefik dashboard
-(still unauthenticated — see the open item below). Revisit routing everything
-through Traefik + Authentik uniformly once that middleware actually exists.
-Public hostname mapping is configured in Cloudflare's dashboard (tunnel
-ingress rules), not in a local `cloudflared` config file.
+**Reverted after extensive troubleshooting turned up a persistent
+intermittent 502 that never got fully root-caused.** Ruled out along the
+way: DNS, Docker networking, Immich itself (100% reliable under both
+sequential and 40-concurrent-request direct testing, bypassing the tunnel
+entirely), a wider Cloudflare regional incident. Not fixed by forcing HTTP/2
+instead of QUIC, forcing IPv4-only edge connections, or a keep-alive timeout
+flag (which turned out to be a documented no-op for a dashboard-managed
+ingress config anyway). Failures consistently left zero trace in
+`cloudflared`'s own debug logs, pointing at something in Cloudflare's edge
+routing to this specific tunnel that wasn't controllable from the container
+side. Also saw a device-specific pattern (consistently worse on one phone
+than another) that was never isolated — plausibly the client side's own
+IPv6/HTTP3 preference, a completely separate connection leg from anything
+that was tuned.
+
+Decided: not worth running this publicly in its current flaky state, and a
+good moment to reconsider the security posture too — the only things
+actually gating access were Cloudflare's edge and Immich's own login,
+since Authentik was never wired in front of it. `cloudflared` removed from
+`tousou-gate`. The `cloudflare_tunnel_token` vault var was left in place
+(harmless, encrypted) in case this gets revisited — if it does, recreating
+the tunnel object from scratch in Cloudflare's dashboard is the next
+untried step, since the current one's degraded state was never explained.
 
 ### mosquitto had no config file — fixed
 `sunrise-mqtt-soup`'s mosquitto has bind-mounted `/docker/configs/mosquitto`

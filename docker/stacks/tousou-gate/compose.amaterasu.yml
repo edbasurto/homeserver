@@ -99,20 +99,6 @@ services:
     networks:
       - default
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflared
-    restart: unless-stopped
-    labels:
-      com.ookami.stack: "tousou-gate"
-      com.ookami.service: "cloudflared"
-      com.ookami.owner: "homelab"
-      com.ookami.environment: "prod"
-    command: tunnel --no-autoupdate --protocol http2 --edge-ip-version 4 --loglevel debug run
-    env_file: .env.amaterasu
-    networks:
-      - proxy
-
 volumes:
   traefik-certs_data:
   authentik-postgres_data:
