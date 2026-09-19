@@ -12,10 +12,19 @@ services:
       com.ookami.environment: "prod"
     devices:
       - /dev/dri:/dev/dri
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
       - /docker/configs/jellyfin:/config
       - jellyfin_data:/data
