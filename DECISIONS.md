@@ -219,7 +219,26 @@ rather than a capability grant on a shared system Python binary.
 managed as plain `copy: content:` in `roles/discord-monitor-bot`, unlike the
 `.env` which stays vault-only. Currently lists amaterasu, holo, chibiterasu,
 sif, and kutone — fenrir, zinogre, and lycagon left out (no tracked/live IP
-for them yet).
+for them yet). It lands at the repo root, not `src/` — the app resolves it
+relative to the process's working directory, matching how the old Docker
+setup's bind mount put it at `/app/sites.json`, not `/app/src/sites.json`.
+
+**Deployed and confirmed working 2026-09-19**, after finding two more real
+issues beyond the ones anticipated above:
+- The first apt task included `python3-pip` "just in case" — on 24.04 that
+  drags in a full C/C++ build toolchain (`gcc`, `g++`, `python3-dev`, image
+  libraries) as dependencies, directly undermining the whole point of
+  avoiding Docker's overhead here. A venv doesn't need it — it bundles its
+  own pip via `ensurepip`. Removed `python3-pip` from the role and purged
+  the ~92MB of now-unneeded packages from Kutone after the fact.
+- `asyncping3` imports `pkg_resources`, but installing plain `setuptools`
+  didn't fix the resulting `ModuleNotFoundError` — setuptools removed
+  `pkg_resources` entirely as of **v82.0.0**. Pinned `setuptools<82`.
+
+Confirmed via logs: logged into Discord, pinging all 5 fleet hosts on a
+loop, 36.4MB memory peak — in line with the estimate above. Old Docker
+container, image, and directory (including a stale copy of the `.env`)
+removed from Amaterasu.
 
 ### HA secrets.yaml is optional
 `homeassistant_secrets_yaml` in the amaterasu vault is optional. The

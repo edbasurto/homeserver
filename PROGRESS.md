@@ -15,7 +15,7 @@ Environment name: **Johto** (Semaphore project, tag prefixes, future DNS zone)
 | Amaterasu | MSI Z590 PRO WiFi | Production Docker host | 192.168.50.180 | **Fully deployed and verified.** Already running the new stack-based architecture (mapped it out before touching anything — turned out to be further along than assumed, just one orphaned leftover service, which was removed). All 7 canonical stacks confirmed up and healthy. Quadro P620 driver + container passthrough working — Jellyfin's container confirmed sees the GPU (`nvidia-smi` clean inside it). |
 | Holo | Intel NUC7i5BNK (i5-7260U) | Ansible control plane + monitoring | 192.168.50.65 | **Fully deployed and verified.** devs-talk + warning-core running. Staying put for now — the planned migration to the P330 Tiny is on hold (see below). |
 | Chibiterasu | ThinkCentre M920q | Staging | 192.168.50.170 | **Fully deployed and verified.** warning-core (agents) running. RAM temporarily at 16GB (a second stick is earmarked but not installed yet). |
-| Kutone | Raspberry Pi 3B+ | NUT server (UPS monitoring) | 192.168.50.12 | **Live, verified.** Ubuntu Server 24.04.5 LTS. Now powered from the UPS's own Critical (battery-backed) outlet bank. |
+| Kutone | Raspberry Pi 3B+ | NUT server + Discord Site Monitor Bot | 192.168.50.12 | **Live, verified.** Ubuntu Server 24.04.5 LTS. Now powered from the UPS's own Critical (battery-backed) outlet bank. Site monitor bot runs via systemd + venv (not Docker) — moved from Amaterasu 2026-09-19. |
 | Lycagon | ASRock Z490M-ITX/ac | OPNsense edge router (not configured) | — | QSFP+ NIC installed, needs a QSA adapter for 10G to the switch. Switch side is ready now — this is the next actionable physical task. |
 | Fenrir | Synology RS815 | NAS (DSM) | — | Existing, stable, outside the active migration. |
 | Sif | ThinkCentre M910s | Ansible-managed + future NAS | 192.168.50.125 | **Legacy stack wiped, now Ansible-managed.** warning-core (agents) running, confirmed healthy in Prometheus/NUT/Tailscale. Actual NAS storage role (Samba/NFS shares) still pending — the 20TB drive isn't installed yet. |
@@ -131,6 +131,40 @@ Both directions work now:
   the current batteries are still worn enough that the whole UPS drops almost immediately on a
   real outage regardless of outlet bank, so that specific gap still needs the battery swap.
   Everything else (Amaterasu crashing, a hung Docker daemon, a bad reboot) is already covered.
+
+---
+
+## Discord Site Monitor Bot — moved to Kutone, 2026-09-19
+
+Was on Amaterasu (Docker) — moved because a monitor that dies along with the
+host it's supposed to detect failures for is a broken design. New
+`roles/discord-monitor-bot`: systemd + a Python venv, deliberately not
+Docker, since Kutone's whole reason for existing is staying minimal (see
+DECISIONS.md for the full "why not Docker here" reasoning and the measured
+headroom numbers).
+
+Three real bugs hit getting it running, in order:
+1. First apt task included `python3-pip`, which on 24.04 drags in a full
+   C/C++ build toolchain (`gcc`, `g++`, `python3-dev`, image libraries) as
+   dependencies — directly undermining the point of avoiding Docker's
+   overhead. A venv doesn't need it (bundles its own pip via `ensurepip`).
+   Fixed the role, then removed the ~92MB of now-unneeded packages from
+   Kutone with `apt remove --purge` + `autoremove`.
+2. `asyncping3` imports `pkg_resources`, which a bare `python3 -m venv` on
+   3.12 doesn't bundle. Installing plain `setuptools` didn't fix it either —
+   setuptools removed `pkg_resources` entirely as of **v82.0.0**. Pinned
+   `setuptools<82`.
+3. `sites.json` landed in the wrong place (`src/sites.json`, matching where
+   the `.example` file lives in the repo) — the app actually resolves it
+   relative to the process's working directory (the repo root), matching
+   how the old Docker setup's bind mount put it at `/app/sites.json`, not
+   `/app/src/sites.json`.
+
+Confirmed fully working: logged into Discord, pinging all 5 fleet hosts on
+a loop, 36.4MB memory peak. Old Docker container, image, and directory
+(including a stale copy of the `.env` with the real token) removed from
+Amaterasu. `discord_monitor_bot_env` vault var moved from
+`host_vars/amaterasu/vault.yml` to `host_vars/kutone/vault.yml` to match.
 
 ---
 

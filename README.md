@@ -58,7 +58,7 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 | **Amaterasu** | MSI Z590 PRO WiFi, i5, Quadro P620 | Production | 🟢 Live — fully deployed on the new stack |
 | **Holo** | Intel NUC7i5BNK | Ansible control plane, CI/CD, monitoring | 🟢 Live |
 | **Chibiterasu** | Lenovo ThinkCentre M920q, i7-8700T | Staging / pre-prod validation | 🟢 Live |
-| **Kutone** | Raspberry Pi 3B+ | UPS monitoring (NUT server) | 🟢 Live — powered from the UPS's own battery-backed outlets |
+| **Kutone** | Raspberry Pi 3B+ | UPS monitoring (NUT server) + Discord Site Monitor Bot | 🟢 Live — powered from the UPS's own battery-backed outlets |
 | **Lycagon** | ASRock Z490M-ITX/ac | Edge router (OPNsense) | ⚪ Not yet configured |
 | **Fenrir** | Synology RS815 | NAS | 🟢 In service |
 | **Sif** | Lenovo ThinkCentre M910s | Ansible-managed, future NAS | 🟢 Live — legacy stack wiped, warning-core running; NAS storage pending a drive install |
