@@ -99,12 +99,12 @@
     var: music_bot_output
   when: inventory_hostname == 'amaterasu'
 
-#- name: Start Discord Monitor Bot
-#  community.docker.docker_compose_v2:
-#    project_src: /home/{{ username }}/discord-site-monitor-bot
-#  register: monitor_bot_output
-#  when: ansible_hostname == 'amaterasu'
-#  ignore_errors: true
+- name: Start Discord Monitor Bot
+  community.docker.docker_compose_v2:
+    project_src: /home/{{ username }}/discord-site-monitor-bot
+  register: monitor_bot_output
+  when: inventory_hostname == 'amaterasu'
 
-#- debug:
-#    var: monitor_bot_output
+- debug:
+    var: monitor_bot_output
+  when: inventory_hostname == 'amaterasu'
