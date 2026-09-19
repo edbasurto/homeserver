@@ -260,9 +260,10 @@
   when: inventory_hostname == "sif"
 
 # ==============================
-# Discord bot .env files (Amaterasu only)
-# Vault vars required in host_vars/amaterasu/vault.yml:
-#   discord_music_bot_env, discord_monitor_bot_env
+# Discord Music Bot .env file (Amaterasu only)
+# Vault var required in host_vars/amaterasu/vault.yml: discord_music_bot_env
+# (discord_monitor_bot_env now lives in host_vars/kutone/vault.yml — that
+# bot moved off Amaterasu, see roles/discord-monitor-bot)
 # ==============================
 
 - name: Ensure discord-music-bot directory exists on amaterasu
@@ -283,23 +284,9 @@
     mode: "0600"
   when: inventory_hostname == "amaterasu"
 
-- name: Ensure discord-site-monitor-bot directory exists on amaterasu
-  file:
-    path: /home/{{ username }}/discord-site-monitor-bot
-    state: directory
-    owner: "{{ username }}"
-    group: "{{ username }}"
-    mode: "0750"
-  when: inventory_hostname == "amaterasu"
-
-- name: Write discord-site-monitor-bot .env from vault
-  copy:
-    dest: /home/{{ username }}/discord-site-monitor-bot/.env
-    content: "{{ discord_monitor_bot_env }}"
-    owner: "{{ username }}"
-    group: "{{ username }}"
-    mode: "0600"
-  when: inventory_hostname == "amaterasu"
+# discord-site-monitor-bot moved to Kutone (systemd + venv, not Docker) —
+# see roles/discord-monitor-bot. A monitor that runs on the host it's
+# supposed to detect failures for is a broken design.
 
 # ==============================
 # Home Assistant config (Amaterasu only)

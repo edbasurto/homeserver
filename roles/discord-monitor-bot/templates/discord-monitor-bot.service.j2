@@ -1,0 +1,23 @@
+[Unit]
+Description=Discord Site Monitor Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ username }}
+WorkingDirectory=/home/{{ username }}/discord-site-monitor-bot
+EnvironmentFile=/home/{{ username }}/discord-site-monitor-bot/.env
+ExecStart=/home/{{ username }}/discord-site-monitor-bot/venv/bin/python3 -u -m src.main
+Restart=on-failure
+RestartSec=5
+
+# asyncping3 needs raw sockets for ICMP — grant just that one capability
+# instead of running as root or setcap-ing the shared system Python (which
+# the Docker image did, but that's a broader change than this one bot needs).
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -180,14 +180,46 @@ ansible-playbook -i inventory.vagrant playbook.yml
 ```
 
 ### Discord bot .env files are vault-managed
-Both bot `.env` files are stored in `host_vars/amaterasu/vault.yml` as
-`discord_music_bot_env` and `discord_monitor_bot_env`. The container-configs
-role writes them to the correct paths on amaterasu on every deploy. They should
-never be committed to the repo directly.
+`discord_music_bot_env` lives in `host_vars/amaterasu/vault.yml`;
+`discord_monitor_bot_env` lives in `host_vars/kutone/vault.yml` (moved there
+2026-09-19 along with the bot itself — see below). The relevant role writes
+each to the correct host/path on every deploy. Neither should ever be
+committed to the repo directly.
 
 Variable names for reference:
-- **discord-music-bot:** `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `DISCORD_TOKEN`
-- **discord-site-monitor-bot:** `DISCORD_TOKEN`, `ALERT_CHANNEL_ID`
+- **discord-music-bot** (amaterasu): `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `DISCORD_TOKEN`
+- **discord-site-monitor-bot** (kutone): `DISCORD_TOKEN`, `ALERT_CHANNEL_ID`, `MONITOR_ROLE_ID`
+
+### Discord Site Monitor Bot moved from Amaterasu to Kutone
+A site-monitor bot that runs on the same host it's supposed to detect
+failures for is a broken design — if Amaterasu goes down, the thing that's
+meant to tell you goes down with it. Kutone doesn't have this problem: it's
+independent of Amaterasu's failure modes, and (as of 2026-09-19) sits on the
+UPS's own battery-backed outlets.
+
+Runs via **systemd + a Python venv, deliberately not Docker** — Kutone is a
+Raspberry Pi 3B+ with ~900MB usable RAM whose entire reason for existing is
+staying minimal and rarely touched (it's the NUT server). Docker's daemon
+layer (`dockerd` + `containerd`) carries a real standing overhead —
+commonly 100-200MB+ before the bot process itself even starts — that buys
+nothing here since this is the only thing that would ever run on this host.
+A plain systemd unit costs only the Python process itself (40-80MB).
+Measured Kutone's actual headroom before deciding: 631MB available, load
+average ~0, NUT's own daemons using under 12MB combined — either approach
+would have technically fit, but only one matches "don't load up the
+safety-critical box."
+
+The one non-obvious piece: `asyncping3` needs raw-socket access for ICMP.
+The old Docker image handled this with `setcap cap_net_raw+ep` on the
+container's Python binary. The systemd unit uses `AmbientCapabilities=
+CAP_NET_RAW` instead — same effect, but scoped to just this one service
+rather than a capability grant on a shared system Python binary.
+
+`sites.json` (the list of fleet hosts it pings — not a secret) is Ansible-
+managed as plain `copy: content:` in `roles/discord-monitor-bot`, unlike the
+`.env` which stays vault-only. Currently lists amaterasu, holo, chibiterasu,
+sif, and kutone — fenrir, zinogre, and lycagon left out (no tracked/live IP
+for them yet).
 
 ### HA secrets.yaml is optional
 `homeassistant_secrets_yaml` in the amaterasu vault is optional. The

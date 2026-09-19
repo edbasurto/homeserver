@@ -84,9 +84,15 @@
   when: inventory_hostname == "sif"
 
 # ==============================
-# Discord bots (amaterasu only)
-# NOTE: .env files for these bots live on the host and are NOT managed by
-# Ansible — back them up manually before wiping amaterasu.
+# Discord Music Bot (amaterasu only)
+# NOTE: .env file lives on the host and is NOT managed by Ansible — back it
+# up manually before wiping amaterasu.
+#
+# The Discord Site Monitor Bot used to run here too, but moved to Kutone
+# (see roles/discord-monitor-bot) — a monitor that dies along with the host
+# it's supposed to detect failures for defeats the point. Kutone is also
+# independent of Amaterasu's own failure modes and (as of 2026-09-19) on the
+# UPS's battery-backed outlets.
 # ==============================
 
 - name: Start Discord Music Bot
@@ -98,13 +104,4 @@
 - debug:
     var: music_bot_output
   when: inventory_hostname == 'amaterasu'
-
-- name: Start Discord Monitor Bot
-  community.docker.docker_compose_v2:
-    project_src: /home/{{ username }}/discord-site-monitor-bot
-  register: monitor_bot_output
-  when: inventory_hostname == 'amaterasu'
-
-- debug:
-    var: monitor_bot_output
   when: inventory_hostname == 'amaterasu'

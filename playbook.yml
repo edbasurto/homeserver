@@ -56,6 +56,14 @@
   roles:
     - tailscale
 
+- name: Discord Site Monitor Bot (Kutone, systemd + venv, not Docker)
+  hosts: kutone
+  become: yes
+
+  tags: [discord-monitor-bot]
+  roles:
+    - discord-monitor-bot
+
 #    - name: install net-tools
 #      apt:
 #        install: net-tools

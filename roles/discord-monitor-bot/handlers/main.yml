@@ -1,0 +1,6 @@
+---
+- name: restart discord-monitor-bot
+  systemd:
+    name: discord-monitor-bot
+    daemon_reload: yes
+    state: restarted
