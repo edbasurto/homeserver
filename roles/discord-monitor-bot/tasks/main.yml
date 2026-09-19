@@ -12,10 +12,13 @@
 # to tell you.
 
 - name: Install python3-venv and git
+  # Deliberately NOT python3-pip -- a venv gets its own bundled pip via
+  # ensurepip automatically. python3-pip on 24.04 drags in a full C/C++
+  # build toolchain (gcc, g++, python3-dev, image libraries) as dependencies
+  # -- the opposite of what this host is supposed to stay minimal.
   apt:
     name:
       - python3-venv
-      - python3-pip
       - git
     state: present
 
@@ -27,6 +30,16 @@
   become: yes
   become_user: "{{ username }}"
 
+- name: Ensure setuptools is present in the venv
+  # asyncping3 imports pkg_resources (from setuptools) but a bare `python3
+  # -m venv` on 3.12 no longer bundles it automatically.
+  ansible.builtin.pip:
+    name: setuptools
+    virtualenv: "/home/{{ username }}/discord-site-monitor-bot/venv"
+    virtualenv_command: python3 -m venv
+  become: yes
+  become_user: "{{ username }}"
+
 - name: Create venv and install dependencies
   ansible.builtin.pip:
     requirements: "/home/{{ username }}/discord-site-monitor-bot/requirements.txt"
@@ -34,6 +47,7 @@
     virtualenv_command: python3 -m venv
   become: yes
   become_user: "{{ username }}"
+  notify: restart discord-monitor-bot
 
 - name: Write discord-site-monitor-bot .env from vault
   copy:
