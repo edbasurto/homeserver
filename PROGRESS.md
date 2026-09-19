@@ -59,13 +59,24 @@ replaced with a stack-based Ansible-managed structure:
   Kutone's NUT server as a slave monitor. Tagged `nut-client` so it can run standalone. Applied
   to `docker-hosts` in the playbook — confirmed active on all three hosts now (holo, chibiterasu,
   amaterasu all connecting to Kutone).
+- **tailscale** (new) — adds Tailscale's official apt repo, installs, enables `tailscaled`, and
+  joins the tailnet under each host's inventory name. Idempotent — checks `tailscale ip -4`
+  first and skips hosts already connected. Tagged `tailscale`, applied to a dedicated
+  `tailscale_hosts` group (see Inventory below). See "Remote Access" section below for rollout
+  details.
 
 ### Inventory (`inventory`)
 - Group: `[docker-hosts]` — amaterasu, holo (local), chibiterasu
 - holo uses `ansible_connection=local` — **playbook must be run from holo**, manually via SSH
   for now (not yet through Semaphore — see Known Open Items)
-- Non-Docker hosts: `[nas_hosts]`, `[k3s_nodes]` — **stale**, still references `tsume`/`zinogre`
-  placeholder entries at IPs that no longer match reality; needs cleanup, deferred
+- `[misc_hosts]` (new) — non-Docker infra hosts managed piecemeal, outside the main
+  docker-hosts playbook group. Currently just kutone, brought into Ansible's reach for the
+  first time (previously NUT-server-only, unmanaged) with its own dedicated Holo-issued
+  SSH key, same pattern as the docker-hosts.
+- `[tailscale_hosts]` (new) — cross-cutting group (amaterasu, holo, chibiterasu, kutone, sif)
+  for the tailscale role, independent of which other groups a host belongs to.
+- Non-Docker hosts: `[nas_hosts]`, `[k3s_nodes]` — `sif`'s stale IP fixed (was `.249`, now the
+  real `.125`); `tsume`/`zinogre` k3s placeholders are still stale, needs cleanup, deferred
 - Vagrant testing: use `ansible-playbook -i inventory.vagrant playbook.yml`
 
 ### Other
@@ -152,6 +163,29 @@ Both directions work now:
 
 ---
 
+## Remote Access — Tailscale
+
+Decided on a mesh VPN (Tailscale) for remote access rather than exposing anything to the
+public internet — see DECISIONS.md for the reasoning, including why an earlier attempt at
+public access via a Cloudflare Tunnel was reverted.
+
+- Audited the fleet before rolling anything out: amaterasu and sif already had Tailscale
+  installed and connected from before this effort — left as-is, no need to touch working
+  connections. holo, chibiterasu, and kutone did not have it.
+- New `roles/tailscale` installs it fleet-wide and joins each new host under its own
+  inventory hostname.
+- New devices join tagged (rather than tied to a personal account identity), which also
+  disables Tailscale's periodic node-key expiry for them — no manual re-auth needed down
+  the road for unattended infrastructure.
+- kutone needed a few one-time setup steps before it could be Ansible-managed at all
+  (passwordless sudo, a dedicated SSH key from holo) — same bootstrapping every other host
+  in the fleet already went through.
+- Out of scope for now: Fenrir (Synology) and Lycagon (OPNsense) can both run Tailscale too,
+  but through their own platform-specific mechanisms (Package Center, a router plugin) —
+  not a fit for the same apt-based role. Separate task, later.
+
+---
+
 ## What Still Needs to Happen
 
 ### Vault Vars — amaterasu (all set as of 2026-09-15)
@@ -191,11 +225,11 @@ ansible-vault edit host_vars/amaterasu/vault.yml
       `ansible_connection=local` — Semaphore runs tasks *inside its own container*, which isn't
       the holo host. Needs either a separate Semaphore-facing inventory or switching holo to
       SSH outright before Semaphore can actually drive deploys.
-- [ ] Inventory cleanup: `sif` line still points at the dead `.249`; `tsume`/`zinogre` k3s
-      placeholders are stale
+- [ ] Inventory cleanup: `tsume`/`zinogre` k3s placeholders are stale
 - [ ] A handful of old/unused directories are still sitting on Amaterasu outside the managed
       stacks (leftover from before the migration) — not touched, just noted for a future cleanup
       pass
 - [ ] M700, 3x NUC, and permanent switch hostnames: **TBD**
 - [ ] Permanent switch: Zyxel XMG1915-10E (~$170-190) is top candidate
 - [ ] Discord bot for Semaphore alerts (deferred idea, replaces Telegram)
+- [ ] Tailscale on Fenrir and Lycagon (deferred — different install mechanisms per platform)

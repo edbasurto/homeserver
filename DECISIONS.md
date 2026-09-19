@@ -96,6 +96,45 @@ since Authentik was never wired in front of it. `cloudflared` removed from
 the tunnel object from scratch in Cloudflare's dashboard is the next
 untried step, since the current one's degraded state was never explained.
 
+### Remote access via Tailscale instead
+Chosen in place of the Cloudflare Tunnel approach above: a mesh VPN rather
+than exposing anything to the public internet at all. No public DNS record,
+no edge/tunnel layer to troubleshoot, no attack surface beyond the tailnet
+itself.
+
+New `roles/tailscale`: adds Tailscale's official apt repo, installs, enables
+`tailscaled`, and joins the tailnet under each host's own inventory name.
+Idempotent — checks `tailscale ip -4` first and skips hosts already
+connected, so it's safe to run against the whole fleet repeatedly.
+
+Ran a fleet audit before rolling anything out rather than assuming a clean
+slate (same lesson as the Amaterasu "it's not actually legacy" discovery
+above) — amaterasu and sif already had Tailscale connected from before this
+effort. Left both as-is; retagging an already-working connection isn't worth
+the churn.
+
+New devices join under a **tagged** identity rather than a personal account
+identity. This has a concrete operational benefit for unattended
+infrastructure: tagged devices don't go through Tailscale's normal periodic
+node-key expiry, so there's no manual re-auth needed down the road for
+headless servers. The tag name doubles as another use of the Johto
+environment name, consistent with `group_vars/all/vars.yml`'s own note that
+Johto is meant for exactly this ("tag prefixes").
+
+**Gotcha worth keeping in mind:** `tailscale up` will echo back the full
+command it was given — including the auth key — in its own error output if
+you try to change settings on an already-configured node without restating
+every existing non-default flag (e.g. bare `--force-reauth` with no other
+flags, on a node that already has something like SSH access enabled). The
+role's join task uses `no_log: true` for exactly this reason — never run
+that command manually with verbose/`-v` output, and never re-run it by hand
+against an already-joined host without first checking its current settings.
+
+Out of scope for now: Fenrir (Synology) and Lycagon (OPNsense) can both run
+Tailscale, but through their own platform-specific mechanisms (Package
+Center, a router plugin) rather than a generic apt install — not a fit for
+this role, left for a separate task later.
+
 ### mosquitto had no config file — fixed
 `sunrise-mqtt-soup`'s mosquitto has bind-mounted `/docker/configs/mosquitto`
 since the stack was created, but no task ever wrote a `mosquitto.conf` there
