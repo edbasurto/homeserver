@@ -230,7 +230,11 @@ like it wasn't happening. Four phases now, each with its own checklist.
       outlet bank
 - [ ] NAS backup solution + a real 3-2-1 strategy — Sif still needs to be wiped and rebuilt as
       the actual NAS; nothing is backed up anywhere right now beyond what's already noted
-      per-service
+      per-service. The intended storage is a 20TB drive, not yet installed — needs its own
+      health check (SMART + surface scan) once it goes in. A 1TB WD Blue currently in Sif was
+      only ever a SATA cabling/port test (confirmed working); it has a real, repeatable bad
+      sector (SMART self-test fails at the same LBA every time) but was never going to be the
+      production drive, so this doesn't block anything.
 
 ### Phase 4 — Scale (later)
 - [ ] K3s cluster (M700 control plane + 3x repurposed NUC i5-7260U workers) in a DeskPi
