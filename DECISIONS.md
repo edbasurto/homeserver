@@ -322,17 +322,21 @@ after Chibiterasu's companion spirit in Ōkamiden) because:
   needs to be the last device standing during an outage, low power draw
   matters.
 
-### Kutone's power source — and why fixing it is deliberately on hold
+### Kutone's power source — moved to the UPS's Critical outlets
 Kutone's own power must come from the UPS's **Critical**-labeled (battery-
 backed) outlet bank, confirmed via CyberPower's own documentation — not a
 regular wall outlet, or it loses power at the same instant as everything it's
-supposed to warn.
+supposed to warn. **Done as of 2026-09-19** — Kutone is now physically on
+that outlet bank, ahead of the originally-planned sequencing (this was meant
+to wait for the battery swap first).
 
-As of 2026-09-14 it's still on a wall outlet. This is **deliberate, not
-forgotten**: the UPS's current batteries are old enough that `battery.charge`
-reads effectively 0% and the low-battery flag is set even while charging on
-utility power — meaning on a real outage right now, the whole UPS shuts off
-almost immediately regardless of which outlet anything is plugged into.
-Moving Kutone's power now wouldn't meaningfully protect it yet. The actual
-fix — new batteries — is funds-gated; moving Kutone's power becomes the
-priority again once those batteries are in.
+Worth being precise about what this does and doesn't fix yet: the UPS's
+current batteries are still old enough that `battery.charge` reads
+effectively 0% and the low-battery flag is set even while charging on
+utility power — meaning on an actual outage right now, the whole UPS still
+shuts off almost immediately regardless of which outlet anything is plugged
+into. So this move protects Kutone from everything *except* a real power
+outage today — a crashed/hung/rebooting Amaterasu, a Docker daemon issue,
+etc. — which is most of the realistic failure modes, just not literally all
+of them. The remaining gap (actual outage survival) still needs the battery
+swap, which stays funds-gated and its own separate task.

@@ -58,7 +58,7 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 | **Amaterasu** | MSI Z590 PRO WiFi, i5, Quadro P620 | Production | 🟢 Live — fully deployed on the new stack |
 | **Holo** | Intel NUC7i5BNK | Ansible control plane, CI/CD, monitoring | 🟢 Live |
 | **Chibiterasu** | Lenovo ThinkCentre M920q, i7-8700T | Staging / pre-prod validation | 🟢 Live |
-| **Kutone** | Raspberry Pi 3B+ | UPS monitoring (NUT server) | 🟢 Live |
+| **Kutone** | Raspberry Pi 3B+ | UPS monitoring (NUT server) | 🟢 Live — powered from the UPS's own battery-backed outlets |
 | **Lycagon** | ASRock Z490M-ITX/ac | Edge router (OPNsense) | ⚪ Not yet configured |
 | **Fenrir** | Synology RS815 | NAS | 🟢 In service |
 | **Sif** | Lenovo ThinkCentre M910s | Ansible-managed, future NAS | 🟢 Live — legacy stack wiped, warning-core running; NAS storage pending a drive install |
@@ -206,7 +206,8 @@ Secrets live in `ansible-vault`-encrypted `host_vars/*/vault.yml` files — noth
 
 **Phase 3 — Resilience** 🟡 *in progress*
 - [x] UPS monitoring (NUT) — verified end-to-end, every host connected
-- [ ] UPS batteries swapped, Kutone moved to the UPS's protected outlet
+- [x] Kutone moved to the UPS's protected outlet bank
+- [ ] UPS batteries swapped (funds-gated) — the one remaining gap for real outage protection
 - [ ] NAS backup solution + a real 3-2-1 strategy — Sif is Ansible-managed now, but the
       actual storage/share role is blocked on installing its 20TB drive
 

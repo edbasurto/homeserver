@@ -15,7 +15,7 @@ Environment name: **Johto** (Semaphore project, tag prefixes, future DNS zone)
 | Amaterasu | MSI Z590 PRO WiFi | Production Docker host | 192.168.50.180 | **Fully deployed and verified.** Already running the new stack-based architecture (mapped it out before touching anything — turned out to be further along than assumed, just one orphaned leftover service, which was removed). All 7 canonical stacks confirmed up and healthy. Quadro P620 driver + container passthrough working — Jellyfin's container confirmed sees the GPU (`nvidia-smi` clean inside it). |
 | Holo | Intel NUC7i5BNK (i5-7260U) | Ansible control plane + monitoring | 192.168.50.65 | **Fully deployed and verified.** devs-talk + warning-core running. Staying put for now — the planned migration to the P330 Tiny is on hold (see below). |
 | Chibiterasu | ThinkCentre M920q | Staging | 192.168.50.170 | **Fully deployed and verified.** warning-core (agents) running. RAM temporarily at 16GB (a second stick is earmarked but not installed yet). |
-| Kutone | Raspberry Pi 3B+ | NUT server (UPS monitoring) | 192.168.50.12 | **Live, verified.** Ubuntu Server 24.04.5 LTS. Still powered from a wall outlet, not the UPS itself (see Open Items). |
+| Kutone | Raspberry Pi 3B+ | NUT server (UPS monitoring) | 192.168.50.12 | **Live, verified.** Ubuntu Server 24.04.5 LTS. Now powered from the UPS's own Critical (battery-backed) outlet bank. |
 | Lycagon | ASRock Z490M-ITX/ac | OPNsense edge router (not configured) | — | QSFP+ NIC installed, needs a QSA adapter for 10G to the switch. Switch side is ready now — this is the next actionable physical task. |
 | Fenrir | Synology RS815 | NAS (DSM) | — | Existing, stable, outside the active migration. |
 | Sif | ThinkCentre M910s | Ansible-managed + future NAS | 192.168.50.125 | **Legacy stack wiped, now Ansible-managed.** warning-core (agents) running, confirmed healthy in Prometheus/NUT/Tailscale. Actual NAS storage role (Samba/NFS shares) still pending — the 20TB drive isn't installed yet. |
@@ -125,11 +125,12 @@ Both directions work now:
   attempt — root cause was a typo'd password (mismatched between Kutone's `upsd.users` and
   Holo's vault entry), not a syntax issue. Confirmed fixed via Kutone's own server log:
   `User upsmon@192.168.50.65 logged into UPS [cyberpower]`.
-- **Open**: Kutone's own power is still a plain wall outlet, not the UPS's Critical-labeled
-  (battery-backed) bank. **Deliberately deprioritized** until the battery swap happens — with
-  the current dead batteries, moving it now wouldn't meaningfully help, since the whole UPS
-  drops almost immediately on an outage regardless of which outlet bank anything is on. Once
-  new batteries are in, this becomes the actual priority.
+- **Done 2026-09-19**: Kutone's own power moved to the UPS's Critical-labeled (battery-backed)
+  outlet bank — ahead of the originally-planned sequencing (this was meant to wait for the
+  battery swap first). Protects Kutone from everything except an actual power outage today —
+  the current batteries are still worn enough that the whole UPS drops almost immediately on a
+  real outage regardless of outlet bank, so that specific gap still needs the battery swap.
+  Everything else (Amaterasu crashing, a hung Docker daemon, a bad reboot) is already covered.
 
 ---
 
@@ -241,8 +242,9 @@ like it wasn't happening. Four phases now, each with its own checklist.
 - [x] UPS monitoring (NUT): Kutone verified end-to-end, `upsmon` confirmed connected on every
       docker-host
 - [x] Remote access (Tailscale): fleet-wide rollout, tagged devices for unattended infra
-- [ ] UPS batteries swapped (funds-gated) — then move Kutone's own power to the UPS's Critical
-      outlet bank
+- [x] Kutone moved to the UPS's Critical (battery-backed) outlet bank
+- [ ] UPS batteries swapped (funds-gated) — the one remaining gap: current batteries still
+      can't hold a real outage, regardless of which outlet anything is on
 - [ ] NAS backup solution + a real 3-2-1 strategy — Sif is Ansible-managed now (2026-09-19,
       legacy stack wiped, warning-core running), but the actual NAS storage/share role is
       still pending; nothing is backed up anywhere right now beyond what's already noted
