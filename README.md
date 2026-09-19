@@ -55,13 +55,15 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 
 | Host | Hardware | Role | Status |
 |---|---|---|---|
-| **Amaterasu** | MSI Z590 PRO WiFi, i5, Quadro P620 | Production | 🟡 Live on the legacy stack — new deploy pending |
+| **Amaterasu** | MSI Z590 PRO WiFi, i5, Quadro P620 | Production | 🟢 Live — fully deployed on the new stack |
 | **Holo** | Intel NUC7i5BNK | Ansible control plane, CI/CD, monitoring | 🟢 Live |
 | **Chibiterasu** | Lenovo ThinkCentre M920q, i7-8700T | Staging / pre-prod validation | 🟢 Live |
 | **Kutone** | Raspberry Pi 3B+ | UPS monitoring (NUT server) | 🟢 Live |
 | **Lycagon** | ASRock Z490M-ITX/ac | Edge router (OPNsense) | ⚪ Not yet configured |
 | **Fenrir** | Synology RS815 | NAS | 🟢 In service |
 | **Sif** | Lenovo ThinkCentre M910s | Future NAS rebuild | 🟡 Migration source, still on the old stack |
+
+All three Docker hosts (Amaterasu, Holo, Chibiterasu) are now fully deployed and verified on the stack-based architecture above — the last piece to land was Amaterasu, which turned out to already be most of the way there once actually audited, rather than the ground-up migration originally assumed.
 
 ## The stacks
 
@@ -78,6 +80,15 @@ Every stack name is a HANABIE song, reworked to hint at what it does.
 | `devs-talk` | Girl's Talk | Semaphore, Forgejo, Wiki.js, Planka, code-server, MeshCentral |
 | `warning-core` | Warning!! | Prometheus + Grafana (Holo), agent-only elsewhere |
 | `good-day-so-epic` | Today's Good Day & So Epic | Sandbox — intentionally empty, Chibiterasu only |
+
+## Remote access
+
+No public ports, no reverse-proxy-to-the-internet — the fleet is reachable
+remotely over [Tailscale](https://tailscale.com) (mesh VPN) instead. New
+infrastructure hosts join under a tagged device identity rather than a
+personal one, which also means no periodic manual re-auth for boxes that
+run unattended. An earlier attempt at exposing a service directly to the
+public internet via a tunnel was tried and reverted — see `DECISIONS.md`.
 
 ## Naming conventions
 
@@ -98,8 +109,9 @@ roles/
 ├── geerlingguy.docker/    # Docker CE + Compose plugin
 ├── container-configs/     # writes .env.<hostname> from vault, syncs configs
 ├── containers/            # copies compose files, starts stacks in order
-└── nut-client/            # upsmon — UPS shutdown signal client
-inventory                  # docker-hosts, nas_hosts, k3s_nodes
+├── nut-client/            # upsmon — UPS shutdown signal client
+└── tailscale/             # joins the tailnet, idempotent
+inventory                  # docker-hosts, nas_hosts, k3s_nodes, misc_hosts, tailscale_hosts
 playbook.yml                # the whole thing, tagged per-role
 PROGRESS.md                # detailed, living status log
 DECISIONS.md                # the "why" behind non-obvious choices
@@ -124,7 +136,7 @@ Secrets live in `ansible-vault`-encrypted `host_vars/*/vault.yml` files — noth
 
 ## Roadmap
 
-- **Phase 1** *(current)* — Lycagon/OPNsense live, Amaterasu on the new stack, full monitoring + UPS shutdown coverage
+- **Phase 1** *(current)* — all three Docker hosts on the new stack ✅, monitoring + UPS shutdown coverage ✅, remote access via Tailscale ✅ — Lycagon/OPNsense and the UPS battery swap are the remaining pieces
 - **Phase 2** — K3s cluster (repurposed NUC workers + a dedicated control plane) in a DeskPi RackMate T1
 - **Phase 3** — Permanent 2.5G switch, QSFP uplink to Lycagon
 
