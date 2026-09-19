@@ -30,15 +30,18 @@
   become: yes
   become_user: "{{ username }}"
 
-- name: Ensure setuptools is present in the venv
-  # asyncping3 imports pkg_resources (from setuptools) but a bare `python3
-  # -m venv` on 3.12 no longer bundles it automatically.
+- name: Ensure a pre-removal setuptools is present in the venv
+  # asyncping3 imports pkg_resources (from setuptools), but setuptools
+  # actually dropped pkg_resources entirely as of 82.0.0 -- installing
+  # plain "setuptools" grabs the latest and doesn't have it. Pin below
+  # that cutoff.
   ansible.builtin.pip:
-    name: setuptools
+    name: "setuptools<82"
     virtualenv: "/home/{{ username }}/discord-site-monitor-bot/venv"
     virtualenv_command: python3 -m venv
   become: yes
   become_user: "{{ username }}"
+  notify: restart discord-monitor-bot
 
 - name: Create venv and install dependencies
   ansible.builtin.pip:
