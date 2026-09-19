@@ -65,6 +65,62 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 
 All three Docker hosts (Amaterasu, Holo, Chibiterasu) are now fully deployed and verified on the stack-based architecture above — the last piece to land was Amaterasu, which turned out to already be most of the way there once actually audited, rather than the ground-up migration originally assumed.
 
+## Rack layout
+
+Two physical racks — the big stuff in a 15U rack, the small stuff in a DeskPi RackMate T1.
+
+```
+Main rack — 15U (17" external depth, 12" usable)
+┌────┬──────────────────────────────────────┐
+│ 1U │ Patch panel                           │
+├────┼──────────────────────────────────────┤
+│ 1U │ Switch — Cisco Catalyst 3850 *        │
+├────┼──────────────────────────────────────┤
+│ 1U │ CyberPower outlet strip               │
+├────┼──────────────────────────────────────┤
+│ 1U │ (empty)                               │
+├────┼──────────────────────────────────────┤
+│    │                                       │
+│ 2U │ Sif                                   │
+│    │                                       │
+├────┼──────────────────────────────────────┤
+│ 1U │ (empty)                               │
+├────┼──────────────────────────────────────┤
+│ 1U │ Fenrir                                │
+├────┼──────────────────────────────────────┤
+│ 1U │ (empty)                               │
+├────┼──────────────────────────────────────┤
+│    │                                       │
+│    │                                       │
+│ 3U │ Amaterasu *                           │
+│    │                                       │
+├────┼──────────────────────────────────────┤
+│    │                                       │
+│    │                                       │
+│ 3U │ (empty — reserved for growth)         │
+│    │                                       │
+└────┴──────────────────────────────────────┘
+* on 5"-8" adjustable rack extenders. 120mm exhaust fan mounted above the
+  patch panel; a second fan slot is reserved for later.
+
+DeskPi RackMate T1 — small/edge devices
+┌────┬──────────────────────────────────────┐
+│ 1U │ NETGEAR ProSafe GS108PE (idle) †      │
+├────┼──────────────────────────────────────┤
+│ 1U │ Chibiterasu                           │
+├────┼──────────────────────────────────────┤
+│ 1U │ Zinogre                               │
+├────┼──────────────────────────────────────┤
+│ 1U │ Holo                                  │
+├────┼──────────────────────────────────────┤
+│    │                                       │
+│    │                                       │
+│ 4U │ (empty)                               │
+│    │                                       │
+└────┴──────────────────────────────────────┘
+† not in active use yet — reserved for future expansion
+```
+
 ## The stacks
 
 Every stack name is a HANABIE song, reworked to hint at what it does.

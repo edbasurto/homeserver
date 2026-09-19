@@ -196,12 +196,17 @@ like it wasn't happening. Four phases now, each with its own checklist.
 - [x] **Plan**: services wanted, device inventory + specs, OS per device, device↔service mapping
       (`homelab-baseline-v5.txt`, this repo's naming conventions)
 - [x] **Hardware**: fleet racked and health-checked (NVMe SMART, CPU stress test, log sweep on
-      each active host). Rack layout: 15U rack (17" external depth, 12" usable/rackable depth),
-      top to bottom — patch panel (1U), switch (1U), CyberPower outlet strip (1U), empty (1U),
-      Sif (2U), empty (1U), Synology RS815/Fenrir (1U), empty (1U), Amaterasu (3U), empty (3U)
-      reserved at the bottom for growth. A 120mm fan is mounted above the patch panel exhausting
-      upward; a second fan slot is reserved for later. The switch and Amaterasu ride on 5"-8"
-      adjustable rack extenders to actually fit the 12" rackable depth.
+      each active host). Two physical racks:
+  - **Main rack** — 15U (17" external depth, 12" usable/rackable depth), top to bottom —
+    patch panel (1U), switch (1U), CyberPower outlet strip (1U), empty (1U), Sif (2U), empty
+    (1U), Synology RS815/Fenrir (1U), empty (1U), Amaterasu (3U), empty (3U) reserved at the
+    bottom for growth. A 120mm fan is mounted above the patch panel exhausting upward; a
+    second fan slot is reserved for later. The switch and Amaterasu ride on 5"-8" adjustable
+    rack extenders to actually fit the 12" rackable depth.
+  - **DeskPi RackMate T1** — small/edge devices, top to bottom — NETGEAR ProSafe GS108PE (1U,
+    idle, reserved for future expansion — not in active use yet), Chibiterasu (1U), Zinogre
+    (1U — hardware/role not yet tracked elsewhere in this doc), Holo (1U), 4U empty. No patch
+    panel here yet; considered unnecessary at this scale for now.
 - [x] **Network**: 3850 switch reinstalled, VLAN 50 correct fleet-wide (see Networking section
       below for the two bugs hit and fixed)
 - [ ] **Network**: Lycagon/OPNsense as the real router — still a consumer router (ASUS RT-AX88U)
