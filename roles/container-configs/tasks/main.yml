@@ -59,6 +59,17 @@
     - warning-core
   when: inventory_hostname == "chibiterasu"
 
+- name: Ensure stack directories exist on sif
+  file:
+    path: "/docker/stacks/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - warning-core
+  when: inventory_hostname == "sif"
+
 # ==============================
 # Env files — amaterasu
 # Vault vars required in host_vars/amaterasu/vault.yml:
@@ -234,6 +245,19 @@
     group: root
     mode: "0600"
   when: inventory_hostname == "chibiterasu"
+
+# ==============================
+# Env files — sif
+# ==============================
+
+- name: Write warning-core env file on sif
+  copy:
+    dest: /docker/stacks/warning-core/.env.sif
+    content: ""
+    owner: root
+    group: root
+    mode: "0600"
+  when: inventory_hostname == "sif"
 
 # ==============================
 # Discord bot .env files (Amaterasu only)

@@ -1,0 +1,72 @@
+name: warning-core
+
+# Agents only — runs on sif (NAS-in-progress). Core services live on holo.
+
+services:
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "node-exporter"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    command:
+      - --path.rootfs=/host
+    pid: host
+    network_mode: host
+    volumes:
+      - /:/host:ro,rslave
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "cadvisor"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "8080:8080"
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "dozzle"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "9999:8080"
+
+  dashdot:
+    image: mauricenino/dashdot:latest
+    container_name: dashdot
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "warning-core"
+      com.ookami.service: "dashdot"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    privileged: true
+    environment:
+      - TZ=America/Los_Angeles
+    volumes:
+      - /:/mnt/host:ro
+    ports:
+      - "3002:3001"

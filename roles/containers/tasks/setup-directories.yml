@@ -53,6 +53,17 @@
     - warning-core
   when: inventory_hostname == "chibiterasu"
 
+- name: Create stack directories on sif
+  ansible.builtin.file:
+    path: "/docker/stacks/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - warning-core
+  when: inventory_hostname == "sif"
+
 # Media library mount points (bind-mounted into containers)
 - name: Create media directories on amaterasu
   ansible.builtin.file:

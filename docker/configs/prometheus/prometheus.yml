@@ -16,6 +16,8 @@ scrape_configs:
         labels: {host: amaterasu}
       - targets: ['192.168.50.170:9100']
         labels: {host: chibiterasu}
+      - targets: ['192.168.50.125:9100']
+        labels: {host: sif}
 
   # cadvisor — holo uses container name (same Docker network); others by LAN IP
   - job_name: cadvisor
@@ -26,3 +28,5 @@ scrape_configs:
         labels: {host: amaterasu}
       - targets: ['192.168.50.170:8080']
         labels: {host: chibiterasu}
+      - targets: ['192.168.50.125:8080']
+        labels: {host: sif}

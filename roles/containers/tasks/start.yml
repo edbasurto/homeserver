@@ -69,6 +69,21 @@
   when: inventory_hostname == "chibiterasu"
 
 # ==============================
+# Sif stacks
+# ==============================
+
+- name: Start sif stacks
+  community.docker.docker_compose_v2:
+    project_src: "/docker/stacks/{{ item }}"
+    files:
+      - compose.sif.yml
+    project_name: "{{ item }}"
+    state: present
+  loop:
+    - warning-core
+  when: inventory_hostname == "sif"
+
+# ==============================
 # Discord bots (amaterasu only)
 # NOTE: .env files for these bots live on the host and are NOT managed by
 # Ansible — back them up manually before wiping amaterasu.

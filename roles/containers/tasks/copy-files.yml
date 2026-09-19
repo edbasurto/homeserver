@@ -52,3 +52,18 @@
     - good-day-so-epic
     - warning-core
   when: inventory_hostname == "chibiterasu"
+
+# ==============================
+# Sif compose files
+# ==============================
+
+- name: Copy sif compose files
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/docker/stacks/{{ item }}/compose.sif.yml"
+    dest: "/docker/stacks/{{ item }}/compose.sif.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - warning-core
+  when: inventory_hostname == "sif"

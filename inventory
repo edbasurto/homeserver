@@ -3,6 +3,7 @@
 amaterasu   ansible_host=192.168.50.180 ansible_user=ookami ansible_connection=ssh   ansible_ssh_private_key_file=~/.ssh/amaterasu
 holo        ansible_host=127.0.0.1      ansible_user=ookami ansible_connection=local
 chibiterasu ansible_host=192.168.50.170 ansible_user=ookami ansible_connection=ssh   ansible_ssh_private_key_file=~/.ssh/chibiterasu
+sif         ansible_host=192.168.50.125 ansible_user=ookami ansible_connection=ssh   ansible_ssh_private_key_file=~/.ssh/sif
 
 [app_hosts]
 amaterasu
@@ -13,9 +14,11 @@ holo
 [staging_hosts]
 chibiterasu
 
-# NAS / storage hosts — not managed by Docker playbooks
+# NAS / storage hosts — sif is now also in docker-hosts (Ansible baseline +
+# warning-core monitoring); the actual NAS storage/share role is still pending
+# the 20TB drive install, tracked separately.
 [nas_hosts]
-sif  ansible_host=192.168.50.125 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/sif
+sif
 
 # Non-Docker infra hosts, managed piecemeal (not part of the docker-hosts playbook group)
 [misc_hosts]
