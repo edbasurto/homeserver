@@ -277,3 +277,12 @@ like it wasn't happening. Four phases now, each with its own checklist.
       snapshot/rollback for testing risky changes. Needs its 32GB RAM upgrade first and more
       design discussion (how it'd actually be used) before committing to anything — flagged for
       later, not in progress.
+- [ ] GPU-accelerate Immich's ML container (face recognition, CLIP smart search) with a spare
+      **GTX 750 Ti** — CPU-only ONNX inference is fine for steady day-to-day imports, but a GPU
+      would matter a lot for bulk operations (a big library backfill, or a full re-scan after a
+      model upgrade). The concurrent-session cap that makes Quadro matter for video transcoding
+      doesn't apply to CUDA compute, so a GeForce card has no real disadvantage here. Confirmed
+      feasible: Amaterasu has two free PCIe slots (P620 occupies the top one), and the 750 Ti
+      needs no supplemental power. Maxwell architecture, same driver-support timeline as the
+      P620's Pascal (both feature-complete through driver 580, security-only after). Not
+      started — a "when you want to" task, no blocker left.
