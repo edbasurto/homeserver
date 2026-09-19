@@ -63,9 +63,13 @@
 
 # Not a secret — the list of fleet hosts it pings. Ansible-managed here since
 # it's plain config, unlike the .env (which stays vault-only, never in git).
+# Lands at the repo root, not src/ -- main.py reads SITES_FILE ("sites.json")
+# as a path relative to the process's working directory, which is the repo
+# root (matching how the old Docker setup's WORKDIR /app + bind mount put it
+# at /app/sites.json, not /app/src/sites.json).
 - name: Write sites.json (fleet hosts to monitor)
   copy:
-    dest: "/home/{{ username }}/discord-site-monitor-bot/src/sites.json"
+    dest: "/home/{{ username }}/discord-site-monitor-bot/sites.json"
     content: |
       {
       	"Amaterasu": "192.168.50.180",
