@@ -256,6 +256,14 @@ The Intel NUC7 i5 was previously named Zinogre. It was renamed Holo (wise
 overseer from Spice and Wolf) to reflect its role as the infrastructure brain.
 Zinogre is now an available hostname.
 
+### Cisco 3850 switch named Cerberus
+2026-09-19 — the core Cisco Catalyst 3850 gets a permanent hostname: **Cerberus**.
+Fits the guardian-deity convention (a three-headed hellhound guarding the gate
+everything else passes through) and is canonically an evolution of Fenrir in
+World of Final Fantasy — a fitting lineage since Fenrir is already the NAS.
+Not yet set as the device's actual `hostname` in its running-config; that's a
+follow-up alongside the SSH setup (see Networking / Switch in PROGRESS.md).
+
 ### Sekiro is not part of the homelab
 Sekiro is a gaming PC. It must never appear in inventory, stacks, or any
 homelab configuration.

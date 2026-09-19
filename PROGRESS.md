@@ -170,6 +170,13 @@ Amaterasu. `discord_monitor_bot_env` vault var moved from
 
 ## Networking / Switch
 
+- **Named: Cerberus.** 2026-09-19 — the Cisco Catalyst 3850 gets a permanent hostname,
+  fitting the guardian-deity convention: a three-headed hellhound guarding the gate everything
+  else has to pass through, and canonically an evolution of Fenrir (World of Final Fantasy) —
+  a nice fit given Fenrir is already the NAS. Turned out the hostname (and domain name,
+  `ookami.casa`) had already been applied to the device itself in an earlier undocumented
+  session — confirmed via the existing RSA key name (`cerberus.ookami.casa`) when SSH was set
+  up below. Docs are caught up now; device config already matched.
 - **Cisco Catalyst 3850-48P**: reinstalled 2026-09-14. Hit and fixed two real issues:
   - `gbic-invalid` errdisable on the 10G SFP+ uplink (`Te1/1/4`) — a previously-working
     third-party RJ45-to-SFP+ module got rejected because `service unsupported-transceiver`
@@ -181,6 +188,50 @@ Amaterasu. `discord_monitor_bot_env` vault var moved from
     its unreachability turned out to be a loose/misseated Ethernet cable, unrelated to the switch.
   - Current topology: Xfinity modem → ASUS RT-AX88U → 3850 (Te1/1/4). ASUS is standing in as
     the WiFi AP too (no dedicated AP yet).
+- **SSH access configured, 2026-09-19.** `crypto key generate rsa` (2048-bit), `username ookami
+  privilege 15 secret ...` (privilege 15 chosen deliberately — single-admin home switch, SSH
+  login lands directly in privileged EXEC instead of requiring a separate `enable` step),
+  `ip ssh version 2`, `line vty 0 15` / `transport input ssh` / `login local` (Telnet fully
+  disabled, not left as a fallback).
+  - Hit and fixed a real bug along the way: the switch's management IP (`192.168.50.57`) was
+    assigned to the **Vlan1** SVI, but `show vlan brief` confirmed every actual host port lives
+    on **Vlan50** ("LAN") — Vlan1 only holds two unused stack/module ports (`Gi1/1/1`, `Gi1/1/2`).
+    Same subnet number (192.168.50.0/24) assigned across two different VLANs meant ARP requests
+    from any real host never reached it (`ssh: Host is down`) even though the interface itself
+    showed `up/up`. Fixed by removing the IP from `Vlan1` and re-adding it to `interface vlan 50`
+    instead — no `ip routing` needed since this isn't inter-VLAN routing, just moving the
+    management address into the broadcast domain everything else already lives in.
+  - Confirmed working: `ping` and `ssh ookami@192.168.50.57` both succeed now.
+- **Orthrus — NETGEAR GS108PEv3, brought online in the DeskPi RackMate T1, 2026-09-19.**
+  Named for Cerberus's mythological sibling (another multi-headed guard dog, guarding a lesser
+  domain) — reads as the small edge switch to Cerberus's core switch. Lowercase (`orthrus`) on
+  the device itself, matching every other host in the fleet.
+  - Real bug found and fixed: it was still sitting at its **factory-default IP, `192.168.0.239`**
+    — not anywhere in `192.168.50.0/24` — which is why the previously-documented address never
+    worked (`ssh: Host is down`). Confirmed via a Mac-side interface alias
+    (`sudo ifconfig en6 alias 192.168.0.10 255.255.255.0`) + a direct ping, after a full
+    `192.168.50.0/24` ARP sweep + MAC-vendor lookup (`api.macvendors.com`) came up with no
+    NETGEAR-vendor match at all — proof its management IP wasn't on this subnet, even though
+    the switch was already bridging client traffic on that subnet correctly (a MacBook plugged
+    directly into it got a clean DHCP lease the whole time). Reconfigured to a static
+    `192.168.50.58` / `255.255.255.0` / gateway `192.168.50.1`, right next to Cerberus.
+  - Settings: **Switch Management Mode → Web browser and Plus Utility** (enables NSDP discovery
+    so it can be found again without already knowing its IP — the exact problem just solved the
+    hard way); **Loop Detection → enabled** (this switch doesn't run real STP the way Cerberus
+    does, so it needs its own protection against a self-inflicted cable loop); **VLAN → left
+    disabled** (the uplink from Cerberus's `Gi1/0/48` is an access port on VLAN 50, so it already
+    hands Orthrus plain untagged frames — enabling VLAN mode here would add complexity with no
+    benefit unless the uplink is ever changed to a trunk).
+  - **Firmware: updated `V2.06.10EN` → `V2.06.24EN`, 2026-09-19.** The prior version was directly
+    affected by [CVE-2020-5641](https://www.cve.org/CVERecord?id=CVE-2020-5641) (CSRF — a
+    malicious page could hijack an authenticated admin session and silently reconfigure the
+    switch), fixed in 2.06.14; 2.06.24 was the latest available at the time, so went straight
+    there instead of stopping at the minimum fix. Flashed via the web UI, no issues. The update
+    added a new **Power Saving Mode (IEEE 802.3az)** toggle — enabled it (mature standard,
+    negligible risk, real power savings on ports not running at full utilization). Also declined
+    to enable **File Transfer via Plus Utility (TFTP)** — unlike the NSDP discovery mode enabled
+    above, this would allow pushing firmware/config over an unauthenticated protocol; no real use
+    case for it since the web UI already handles updates fine, so left disabled.
 
 ---
 

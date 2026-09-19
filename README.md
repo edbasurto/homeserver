@@ -17,7 +17,7 @@ A self-hosted homelab, provisioned end-to-end with Ansible and run entirely in D
 flowchart TB
     Internet((Internet)) --> Modem[Xfinity Modem]
     Modem --> Router[ASUS RT-AX88U<br/><i>temporary — OPNsense coming</i>]
-    Router --> Switch[Cisco Catalyst 3850<br/>48-port PoE+]
+    Router --> Switch[🐕 Cerberus — Cisco Catalyst 3850<br/>48-port PoE+]
 
     Switch --> Amaterasu
     Switch --> Holo
@@ -63,6 +63,8 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 | **Fenrir** | Synology RS815 | NAS | 🟢 In service |
 | **Sif** | Lenovo ThinkCentre M910s | Ansible-managed, future NAS | 🟢 Live — legacy stack wiped, warning-core running; NAS storage pending a drive install |
 | **Zinogre** | Intel NUC | Game server (Palworld) | 🟢 Live — game-server duty planned to move to Amaterasu eventually |
+| **Cerberus** | Cisco Catalyst 3850-48P | Core switch | 🟢 Live — reinstalled, VLANs correct fleet-wide, SSH access configured |
+| **Orthrus** | NETGEAR GS108PEv3 | Edge switch, DeskPi RackMate T1 | 🟢 Live — static IP, loop detection on, firmware current (2.06.24) |
 
 All three Docker hosts (Amaterasu, Holo, Chibiterasu) are now fully deployed and verified on the stack-based architecture above — the last piece to land was Amaterasu, which turned out to already be most of the way there once actually audited, rather than the ground-up migration originally assumed.
 
@@ -75,7 +77,7 @@ Main rack — 15U (17" external depth, 12" usable)
 ┌────┬──────────────────────────────────────┐
 │ 1U │ Patch panel                           │
 ├────┼──────────────────────────────────────┤
-│ 1U │ Switch — Cisco Catalyst 3850 *        │
+│ 1U │ Cerberus — Cisco Catalyst 3850 *      │
 ├────┼──────────────────────────────────────┤
 │ 1U │ CyberPower outlet strip               │
 ├────┼──────────────────────────────────────┤
@@ -106,7 +108,7 @@ Main rack — 15U (17" external depth, 12" usable)
 
 DeskPi RackMate T1 — small/edge devices
 ┌────┬──────────────────────────────────────┐
-│ 1U │ NETGEAR ProSafe GS108PE (idle) †      │
+│ 1U │ Orthrus — NETGEAR GS108PEv3           │
 ├────┼──────────────────────────────────────┤
 │ 1U │ Chibiterasu                           │
 ├────┼──────────────────────────────────────┤
@@ -119,7 +121,6 @@ DeskPi RackMate T1 — small/edge devices
 │ 4U │ (empty)                               │
 │    │                                       │
 └────┴──────────────────────────────────────┘
-† not in active use yet — reserved for future expansion
 ```
 
 ## The stacks
@@ -151,7 +152,7 @@ public internet via a tunnel was tried and reverted — see `DECISIONS.md`.
 
 Three axes, deliberately kept separate so nothing collides:
 
-- **Hosts** → wolf and guardian deities (Amaterasu, Holo, Fenrir, Lycagon...)
+- **Hosts** → wolf and guardian deities (Amaterasu, Holo, Fenrir, Lycagon, Cerberus, Orthrus...)
 - **Stacks** → HANABIE song and album wordplay
 - **Environment** → **Johto**, a place name, orthogonal to both
 
