@@ -164,8 +164,11 @@ Both directions work now:
   before touching the real service, then added a GPU device reservation to Jellyfin's compose
   service. Jellyfin's own container confirmed sees the GPU (`nvidia-smi` clean inside it).
   Only 2GB VRAM on this card — fine for a couple of concurrent transcodes, worth watching under
-  heavier 4K HDR tone-mapping load. Enabling NVENC in Jellyfin's own dashboard (Playback
-  settings) is a manual UI step, not Ansible-managed.
+  heavier 4K HDR tone-mapping load. NVENC enabled in Jellyfin's own dashboard (Playback →
+  Transcoding tab — a manual UI step, not Ansible-managed) and confirmed available at the
+  FFmpeg level (`h264_nvenc`/`hevc_nvenc`/`av1_nvenc` + `cuda` hwaccel all show up in Jellyfin's
+  own logs). **Still needs an actual end-to-end test** (watch `nvidia-smi` during a forced
+  transcode) — no media on Amaterasu yet to test with, deferred until there is.
 - **P330 Tiny**: hit an intermittent boot/POST reliability issue during hardware testing —
   after certain restarts it fails to POST at all (no display, host unreachable), recoverable
   only by a full AC unplug/replug. Tested across two different power adapters; the issue tracked
