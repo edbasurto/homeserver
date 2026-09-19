@@ -280,13 +280,33 @@ like it wasn't happening. Four phases now, each with its own checklist.
 - [ ] UPS batteries swapped (funds-gated) — the one remaining gap: current batteries still
       can't hold a real outage, regardless of which outlet anything is on
 - [ ] NAS backup solution + a real 3-2-1 strategy — Sif is Ansible-managed now (2026-09-19,
-      legacy stack wiped, warning-core running), but the actual NAS storage/share role is
-      still pending; nothing is backed up anywhere right now beyond what's already noted
-      per-service. The intended storage is a 20TB drive, not yet installed — needs its own
-      health check (SMART + surface scan) once it goes in. A 1TB WD Blue currently in Sif was
-      only ever a SATA cabling/port test (confirmed working); it has a real, repeatable bad
-      sector (SMART self-test fails at the same LBA every time) but was never going to be the
-      production drive, so this doesn't block anything.
+      legacy stack wiped, warning-core running), but the actual NAS storage/share role is still
+      pending; nothing is backed up anywhere right now beyond what's already noted per-service.
+      **The "1" copy is a 26TB Western Digital Red Pro (model WD260KFGX)** — corrects the
+      earlier "20TB" placeholder — brand new, gift, now physically installed internally in
+      Sif's one 3.5" bay (the plan all along; internal SATA is also the more reliable choice
+      for a drive meant to be written to rarely and protected). Health-checked clean before
+      settling on this plan: tested two spare 8TB drives first in that same bay as candidates
+      (a WD80EMAZ — perfectly clean, 0 reallocated/pending/uncorrectable — and a Seagate
+      ST8000NM0055 — passing, but 16 reallocated sectors on record), neither of which turned out
+      to be needed for this role once the 26TB drive was confirmed. The 1TB WD Blue tested
+      before either of those was only ever a SATA cabling/port test (confirmed working then
+      superseded).
+  - **Both spare 8TB drives are earmarked for reuse, not sitting idle** — deferred idea, not
+    decided: a rack-mounted hot-swap 2-bay dock (USB/eSATA) in the DeskPi RackMate T1, attached
+    to Chibiterasu rather than Holo (avoids adding I/O dependency to the control plane) or
+    Zinogre (its role is already slated to fold into Amaterasu eventually). Deliberately not a
+    3D-printed internal case mod on a Tiny — Chibiterasu is routinely wiped/rebuilt for staging
+    validation, and an externally-docked drive survives that; an internally-fitted one risks an
+    accidental reformat during a routine rebuild. If used as an active backup target, the
+    cleaner WD drive should carry the heavier write load, not the Seagate with its existing wear.
+  - **Longer-term idea, not started**: a spare Z370-I Mini-ITX (currently a gaming PC at work)
+    repurposed as a proper dedicated NAS host — more native SATA ports and headroom than any
+    Tiny/NUC, could house both 8TB drives internally. Real logistics involved (retrieve it,
+    decommission its current role, likely a case change), so treated as a future upgrade path,
+    not today's answer.
+  - **Fenrir (Synology RS815)** is also part of the eventual 3-2-1 picture — existing, stable,
+    not yet folded into an actual documented backup strategy.
 
 ### Phase 4 — Scale (later)
 - [ ] K3s cluster (M700 control plane + 3x repurposed NUC i5-7260U workers) in a DeskPi
@@ -326,8 +346,7 @@ like it wasn't happening. Four phases now, each with its own checklist.
       the likely host, but detection should run on a **Coral TPU** (already planned as a
       purchase), not the shared P620 — Frigate's object detection runs continuously the whole
       time cameras are active, unlike Jellyfin's on-demand transcoding, and would contend for
-      the P620's 2GB VRAM if it ran there instead. A spare **8TB 3.5" HDD** is earmarked for
-      recording storage (well-suited to Frigate's continuous-write pattern — no SSD wear
-      concern), kept separate from other services' data — **needs a full health check (SMART +
-      self-test) before it's trusted with real footage**, same as every other drive in this
-      project. Camera compatibility not evaluated yet. Not started.
+      the P620's 2GB VRAM if it ran there instead. Recording storage TBD — the two spare 8TB
+      drives on hand are now earmarked for the mini-rack backup dock idea above instead (see
+      NAS/3-2-1 item), so this would need either a separate drive or to share one of those.
+      Camera compatibility not evaluated yet. Not started.
