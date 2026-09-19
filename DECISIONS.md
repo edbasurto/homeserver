@@ -269,10 +269,42 @@ The P330 Tiny's GPU (confirmed via physical inspection: Quadro P620, Pascal,
 2GB, ~40W, slot-powered) was pulled and installed in Amaterasu for Jellyfin
 hardware transcoding. Pascal supports real HEVC decode (10/12-bit), which
 matters for modern 4K/HDR media libraries. Installed with a 3D-printed
-full-size PETG bracket (the card came out of the
-P330 in a low-profile bracket). Card is physically present but inert —
-drivers/nvidia-container-toolkit/Jellyfin passthrough are not configured and
-won't be until hyperdimension-library actually deploys to Amaterasu.
+full-size PETG bracket (the card came out of the P330 in a low-profile
+bracket).
+
+**Wired up 2026-09-19.** Explicitly picked `nvidia-driver-580` over
+`ubuntu-drivers`' own "recommended" pick (`nvidia-driver-390`) — 390 is a
+2018-era legacy branch with no meaningful NVENC/NVDEC support, a bad fit for
+a card being installed specifically for hardware transcoding. Added
+`nvidia-container-toolkit` and a GPU device reservation
+(`deploy.resources.reservations.devices`) to Jellyfin's compose service —
+verified the whole chain with a throwaway CUDA container before touching
+the real service. NVENC/NVDEC codec selection itself lives in Jellyfin's
+own dashboard (Playback settings) — a manual UI step, not something Ansible
+manages.
+
+### Amaterasu has UEFI Secure Boot enabled — MOK enrollment gotcha
+Installing the NVIDIA driver requires DKMS to build an out-of-tree kernel
+module, which Secure Boot won't load unless it's signed by a key the
+firmware trusts. Ubuntu's tooling handles this by generating a
+Machine-Owner Key (MOK) and asking for a password on install — but
+**enrolling that key is a physical console step that happens before the OS
+boots, at a firmware-level "MOK Manager" screen, and cannot be done over
+SSH under any circumstances.** Decided to keep Secure Boot enabled (not
+disable it in BIOS to sidestep this) since Amaterasu has monitor access
+available for exactly this kind of step; a KVM/remote-console device for it
+is a known gap, noted as a future want.
+
+Hit a real, reproducible MokManager bug on the first attempt: a
+correctly-typed enrollment password was rejected as "doesn't match" at the
+physical prompt. This is a known quirk of MokManager's primitive pre-boot
+keyboard handling (Shift-key/capital-letter input is a common trigger), not
+user error — the fix was simply to reboot again (safe: Secure Boot stays on,
+Ubuntu boots fine either way, the NVIDIA module just doesn't load until
+enrollment succeeds) and retry with a fresh password. Worked cleanly the
+second time. Relevant if this ever needs doing again on another host: don't
+assume a rejected MOK password means it was mistyped — a reboot-and-retry is
+the correct first response, not troubleshooting the typing itself.
 
 ---
 

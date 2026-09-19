@@ -12,7 +12,7 @@ Environment name: **Johto** (Semaphore project, tag prefixes, future DNS zone)
 
 | Hostname | Hardware | Role | IP | Status |
 |---|---|---|---|---|
-| Amaterasu | MSI Z590 PRO WiFi | Production Docker host | 192.168.50.180 | **Fully deployed and verified.** Already running the new stack-based architecture (mapped it out before touching anything — turned out to be further along than assumed, just one orphaned leftover service, which was removed). All 7 canonical stacks confirmed up and healthy. Quadro P620 physically installed, inert until Jellyfin transcode is wired up. |
+| Amaterasu | MSI Z590 PRO WiFi | Production Docker host | 192.168.50.180 | **Fully deployed and verified.** Already running the new stack-based architecture (mapped it out before touching anything — turned out to be further along than assumed, just one orphaned leftover service, which was removed). All 7 canonical stacks confirmed up and healthy. Quadro P620 driver + container passthrough working — Jellyfin's container confirmed sees the GPU (`nvidia-smi` clean inside it). |
 | Holo | Intel NUC7i5BNK (i5-7260U) | Ansible control plane + monitoring | 192.168.50.65 | **Fully deployed and verified.** devs-talk + warning-core running. Staying put for now — the planned migration to the P330 Tiny is on hold (see below). |
 | Chibiterasu | ThinkCentre M920q | Staging | 192.168.50.170 | **Fully deployed and verified.** warning-core (agents) running. RAM temporarily at 16GB (a second stick is earmarked but not installed yet). |
 | Kutone | Raspberry Pi 3B+ | NUT server (UPS monitoring) | 192.168.50.12 | **Live, verified.** Ubuntu Server 24.04.5 LTS. Still powered from a wall outlet, not the UPS itself (see Open Items). |
@@ -153,8 +153,19 @@ Both directions work now:
 
 - **GPU**: pulled a **Nvidia Quadro P620** (2GB, Pascal) out of the P330 Tiny and installed it in
   **Amaterasu**, using a 3D-printed full-size PETG bracket (confirmed fit). Pascal supports real
-  HEVC decode (10/12-bit) for Jellyfin hardware transcoding. Card is physically installed but
-  inert — drivers/nvidia-container-toolkit/Jellyfin passthrough aren't configured yet.
+  HEVC decode (10/12-bit) for Jellyfin hardware transcoding.
+  **2026-09-19: wired up and working.** Installed `nvidia-driver-580` (explicitly, not the
+  `ubuntu-drivers`-recommended 390 — a 2018-era branch with no real NVENC/NVDEC support) +
+  `nvidia-container-toolkit`. Amaterasu has UEFI Secure Boot enabled, which meant a MOK
+  (Machine-Owner Key) enrollment — a physical console step at boot, before the OS loads, that
+  can't be done over SSH. First attempt's enrollment password silently failed at the physical
+  prompt (a known MokManager quirk with password entry, not user error); worked cleanly on a
+  second attempt with a fresh password. Verified the full chain with a throwaway CUDA container
+  before touching the real service, then added a GPU device reservation to Jellyfin's compose
+  service. Jellyfin's own container confirmed sees the GPU (`nvidia-smi` clean inside it).
+  Only 2GB VRAM on this card — fine for a couple of concurrent transcodes, worth watching under
+  heavier 4K HDR tone-mapping load. Enabling NVENC in Jellyfin's own dashboard (Playback
+  settings) is a manual UI step, not Ansible-managed.
 - **P330 Tiny**: hit an intermittent boot/POST reliability issue during hardware testing —
   after certain restarts it fails to POST at all (no display, host unreachable), recoverable
   only by a full AC unplug/replug. Tested across two different power adapters; the issue tracked
@@ -242,8 +253,8 @@ like it wasn't happening. Four phases now, each with its own checklist.
 - [ ] K3s cluster (M700 control plane + 3x repurposed NUC i5-7260U workers) in a DeskPi
       RackMate T1 — hostnames still TBD
 - [ ] Permanent 2.5G switch (Zyxel XMG1915-10E top candidate, ~$170-190), QSFP uplink to Lycagon
-- [ ] Configure Jellyfin GPU passthrough for the P620 once hyperdimension-library's drivers are
-      wired up
+- [x] Configure Jellyfin GPU passthrough for the P620 — done 2026-09-19, see GPU / Hardware
+      Pipeline above
 - [ ] Decide what (if anything) to do with the P330 chassis — currently on hold, see above
 
 ### Known Open Items (don't map cleanly to a phase)
@@ -258,3 +269,8 @@ like it wasn't happening. Four phases now, each with its own checklist.
       pass
 - [ ] Discord bot for Semaphore alerts (deferred idea, replaces Telegram)
 - [ ] Tailscale on Fenrir and Lycagon (deferred — different install mechanisms per platform)
+- [ ] Chibiterasu running Proxmox instead of bare Ubuntu (deferred idea, not decided) — would
+      let it host arbitrary VMs, not just the current Docker staging role, and adds real
+      snapshot/rollback for testing risky changes. Needs its 32GB RAM upgrade first and more
+      design discussion (how it'd actually be used) before committing to anything — flagged for
+      later, not in progress.
