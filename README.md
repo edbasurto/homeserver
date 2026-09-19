@@ -136,8 +136,24 @@ Secrets live in `ansible-vault`-encrypted `host_vars/*/vault.yml` files — noth
 
 ## Roadmap
 
-- **Phase 1** *(current)* — all three Docker hosts on the new stack ✅, monitoring + UPS shutdown coverage ✅, remote access via Tailscale ✅ — Lycagon/OPNsense and the UPS battery swap are the remaining pieces
-- **Phase 2** — K3s cluster (repurposed NUC workers + a dedicated control plane) in a DeskPi RackMate T1
-- **Phase 3** — Permanent 2.5G switch, QSFP uplink to Lycagon
+**Phase 1 — Foundation** 🟡 *mostly done*
+- [x] Plan: services, device inventory, OS choices, device↔service mapping
+- [x] Hardware: fleet racked and health-checked
+- [x] Network: switch reinstalled, VLANs correct fleet-wide
+- [ ] Network: Lycagon/OPNsense as the real router (still a consumer router today)
+- [x] Ansible control plane on Holo (push + pull access, Semaphore installed)
+
+**Phase 2 — Core Services Live** ✅ *done*
+- [x] Staging (Chibiterasu) deployed and verified
+- [x] Production (Amaterasu) deployed and verified — all 7 stacks live
+
+**Phase 3 — Resilience** 🟡 *in progress*
+- [x] UPS monitoring (NUT) — verified end-to-end, every host connected
+- [ ] UPS batteries swapped, Kutone moved to the UPS's protected outlet
+- [ ] NAS backup solution + a real 3-2-1 strategy (Sif rebuild)
+
+**Phase 4 — Scale** *(later)*
+- [ ] K3s cluster (repurposed NUC workers + a dedicated control plane) in a DeskPi RackMate T1
+- [ ] Permanent 2.5G switch, QSFP uplink to Lycagon
 
 Full status detail lives in [`PROGRESS.md`](PROGRESS.md); the reasoning behind non-obvious choices is in [`DECISIONS.md`](DECISIONS.md).

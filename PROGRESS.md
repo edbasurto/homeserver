@@ -186,40 +186,55 @@ public access via a Cloudflare Tunnel was reverted.
 
 ---
 
-## What Still Needs to Happen
+## Roadmap Progress
 
-### Vault Vars — amaterasu (all set as of 2026-09-15)
+Restructured 2026-09-18 — the old "Phase 1 (current)" label was swallowing basically the
+entire foundational buildout into one bucket, which made real, substantial progress look
+like it wasn't happening. Four phases now, each with its own checklist.
 
-All required vars (`authentik_secret_key`, `authentik_pg_password`, `immich_pg_password`,
-`nextcloud_pg_password`, `nextcloud_admin_user`, `nextcloud_admin_password`,
-`discord_music_bot_env`, `discord_monitor_bot_env`) are populated. `homeassistant_secrets_yaml`
-is empty, which is fine — it's optional and the role skips writing it if unset.
+### Phase 1 — Foundation 🟡 mostly done
+- [x] **Plan**: services wanted, device inventory + specs, OS per device, device↔service mapping
+      (`homelab-baseline-v5.txt`, this repo's naming conventions)
+- [x] **Hardware**: fleet racked and health-checked (NVMe SMART, CPU stress test, log sweep on
+      each active host). Rack layout: 15U rack (17" external depth, 12" usable/rackable depth),
+      top to bottom — patch panel (1U), switch (1U), CyberPower outlet strip (1U), empty (1U),
+      Sif (2U), empty (1U), Synology RS815/Fenrir (1U), empty (1U), Amaterasu (3U), empty (3U)
+      reserved at the bottom for growth. A 120mm fan is mounted above the patch panel exhausting
+      upward; a second fan slot is reserved for later. The switch and Amaterasu ride on 5"-8"
+      adjustable rack extenders to actually fit the 12" rackable depth.
+- [x] **Network**: 3850 switch reinstalled, VLAN 50 correct fleet-wide (see Networking section
+      below for the two bugs hit and fixed)
+- [ ] **Network**: Lycagon/OPNsense as the real router — still a consumer router (ASUS RT-AX88U)
+      today; switch side has been ready since the 3850 reinstall
+- [x] **Ansible control plane**: Holo set up with push + pull GitHub access, Semaphore installed
+      (not yet actually driving deploys — see Known Open Items)
 
-```bash
-ansible-vault edit host_vars/amaterasu/vault.yml
-```
+### Phase 2 — Core Services Live ✅ done
+- [x] Staging (Chibiterasu): warning-core (agents) deployed and verified
+- [x] Production (Amaterasu): all 7 canonical stacks deployed and verified — was already
+      substantially migrated when actually audited, not the ground-up deploy originally assumed
+- [x] All required vault vars populated (`host_vars/amaterasu/vault.yml`,
+      `host_vars/holo/vault.yml`) — see DECISIONS.md for the variable names by stack
 
-### Deployment Order — all three hosts done
+### Phase 3 — Resilience 🟡 in progress
+- [x] UPS monitoring (NUT): Kutone verified end-to-end, `upsmon` confirmed connected on every
+      docker-host
+- [x] Remote access (Tailscale): fleet-wide rollout, tagged devices for unattended infra
+- [ ] UPS batteries swapped (funds-gated) — then move Kutone's own power to the UPS's Critical
+      outlet bank
+- [ ] NAS backup solution + a real 3-2-1 strategy — Sif still needs to be wiped and rebuilt as
+      the actual NAS; nothing is backed up anywhere right now beyond what's already noted
+      per-service
 
-1. ~~SSH to holo → run playbook --limit holo~~ **DONE** — devs-talk + warning-core live, verified
-2. ~~`ansible-playbook playbook.yml --limit chibiterasu`~~ **DONE** — warning-core (agents) live,
-   verified
-3. ~~`ansible-playbook playbook.yml --limit amaterasu`~~ **DONE** — mapped out Amaterasu's actual
-   state first (it was already substantially on the new architecture, not the old flat stack as
-   assumed), removed one orphaned leftover service and some dead compose files, then ran the
-   real reconciliation deploy. Caught and fixed a genuine pre-existing gap in the process:
-   `mosquitto` had never had a config file (bind-mounted a directory that stayed empty since the
-   stack was created) — added `docker/configs/mosquitto/mosquitto.conf` and a sync task, now
-   stable.
-
-### Remaining Phase 1 Items
-- [ ] Configure Lycagon (OPNsense) — switch side is ready now, this is the next physical task
-- [ ] Transfer DHCP from ASUS RT-AX88U to Lycagon
-- [ ] Swap UPS batteries (funds-gated) — then move Kutone's power to the UPS's Critical outlets
-- [ ] Configure Jellyfin GPU passthrough for the P620 once hyperdimension-library deploys
+### Phase 4 — Scale (later)
+- [ ] K3s cluster (M700 control plane + 3x repurposed NUC i5-7260U workers) in a DeskPi
+      RackMate T1 — hostnames still TBD
+- [ ] Permanent 2.5G switch (Zyxel XMG1915-10E top candidate, ~$170-190), QSFP uplink to Lycagon
+- [ ] Configure Jellyfin GPU passthrough for the P620 once hyperdimension-library's drivers are
+      wired up
 - [ ] Decide what (if anything) to do with the P330 chassis — currently on hold, see above
 
-### Known Open Items
+### Known Open Items (don't map cleanly to a phase)
 - [ ] Traefik dashboard is exposed without auth — add Authentik middleware before going live
 - [ ] Semaphore is set up (project "Johto") but `holo`'s inventory entry is
       `ansible_connection=local` — Semaphore runs tasks *inside its own container*, which isn't
@@ -229,7 +244,5 @@ ansible-vault edit host_vars/amaterasu/vault.yml
 - [ ] A handful of old/unused directories are still sitting on Amaterasu outside the managed
       stacks (leftover from before the migration) — not touched, just noted for a future cleanup
       pass
-- [ ] M700, 3x NUC, and permanent switch hostnames: **TBD**
-- [ ] Permanent switch: Zyxel XMG1915-10E (~$170-190) is top candidate
 - [ ] Discord bot for Semaphore alerts (deferred idea, replaces Telegram)
 - [ ] Tailscale on Fenrir and Lycagon (deferred — different install mechanisms per platform)
