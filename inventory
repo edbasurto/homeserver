@@ -41,6 +41,7 @@ amaterasu
 holo
 chibiterasu
 kutone
+sif
 
 [ubuntu:children]
 docker-hosts
