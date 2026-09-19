@@ -1,0 +1,53 @@
+---
+
+- name: Ensure keyring directory exists
+  file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add Tailscale's GPG signing key
+  get_url:
+    url: "https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_distribution_release }}.noarmor.gpg"
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: "0644"
+
+- name: Add Tailscale's apt repository
+  get_url:
+    url: "https://pkgs.tailscale.com/stable/ubuntu/{{ ansible_distribution_release }}.tailscale-keyring.list"
+    dest: /etc/apt/sources.list.d/tailscale.list
+    mode: "0644"
+  register: tailscale_repo
+
+- name: Update apt cache after adding the Tailscale repo
+  apt:
+    update_cache: yes
+  when: tailscale_repo.changed
+
+- name: Install Tailscale
+  apt:
+    name: tailscale
+    state: present
+
+- name: Ensure tailscaled is enabled and running
+  systemd:
+    name: tailscaled
+    enabled: yes
+    state: started
+
+- name: Check current Tailscale connection state
+  command: tailscale ip -4
+  register: tailscale_ip_check
+  changed_when: false
+  failed_when: false
+
+# Reusable auth key from the Tailscale admin console (group_vars/all/vault.yml).
+# Each host joins under its own inventory hostname, matching the wolf/guardian
+# naming already used everywhere else in the fleet.
+- name: Join the tailnet
+  command: >
+    tailscale up
+    --authkey={{ tailscale_authkey }}
+    --hostname={{ inventory_hostname }}
+  when: tailscale_ip_check.rc != 0
+  no_log: true

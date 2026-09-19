@@ -15,7 +15,11 @@ chibiterasu
 
 # NAS / storage hosts — not managed by Docker playbooks
 [nas_hosts]
-sif  ansible_host=192.168.50.249 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/sif
+sif  ansible_host=192.168.50.125 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/sif
+
+# Non-Docker infra hosts, managed piecemeal (not part of the docker-hosts playbook group)
+[misc_hosts]
+kutone ansible_host=192.168.50.12 ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/kutone
 
 # Future K3s cluster nodes (hostnames TBD; using placeholder names until assigned)
 [k3s_nodes]
@@ -28,6 +32,15 @@ zinogre ansible_host=192.168.50.151 ansible_user=ookami ansible_connection=ssh a
 #[rpi]
 #geri   ansible_host=192.168.50. ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/
 #freki  ansible_host=192.168.50. ansible_user=ookami ansible_connection=ssh ansible_ssh_private_key_file=~/.ssh/
+
+
+# Hosts that should be running Tailscale (mesh VPN for remote access).
+# Amaterasu already has it — the role is idempotent, safe to include anyway.
+[tailscale_hosts]
+amaterasu
+holo
+chibiterasu
+kutone
 
 [ubuntu:children]
 docker-hosts
