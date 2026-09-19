@@ -54,8 +54,9 @@ devs-talk.
 - **holo:** core services (Prometheus, Grafana) + agents (node-exporter, cadvisor, dozzle, dashdot)
 - **amaterasu:** agents only
 - **chibiterasu:** agents only
-Prometheus on holo scrapes agents on all three hosts by LAN IP. Core services
-must never be deployed to amaterasu or chibiterasu.
+- **sif:** agents only
+Prometheus on holo scrapes agents on every host by LAN IP. Core services
+must never be deployed anywhere except holo.
 
 ### nextcloud uses postgres, not mariadb (osaki-ni-cloud)
 The old our-7days-restore stack used MariaDB. The baseline specifies postgres.
@@ -218,6 +219,30 @@ the name "holo" (via Tailscale) when this whole consolidation effort started —
 that was legacy/accidental, not a deliberate hardware choice. The real Holo is
 an Intel NUC7i5BNK at `.65`. The old M910s was renamed **Sif** and is the
 migration source for a future NAS rebuild, not a competing Holo candidate.
+
+### Sif brought into Ansible management — 2026-09-19
+Ran a health check first (NVMe SMART, CPU stress test, log sweep) before
+touching anything, same discipline as every other host migration this
+project has done. NVMe and CPU came back clean. A secondary 1TB HDD in the
+box showed a real, repeatable bad sector (SMART self-test fails at the same
+LBA every time) — turned out to be irrelevant, since that drive was only
+ever a SATA cabling/port test, not the intended NAS storage. The actual
+20TB drive isn't installed yet, so the real NAS storage/share role is a
+separate, later task.
+
+Verified no real data existed on the old legacy stack before wiping it
+(checked actual volume sizes — everything was at default/just-initialized
+size, consistent with containers that were started but never really used).
+Stopped and removed all of it, then added `sif` to `docker-hosts` and gave
+it the same `warning-core` (agents-only) treatment as Chibiterasu. It picks
+up `nut-client` and `tailscale` automatically since those plays already
+target broader groups Sif is now part of.
+
+Deliberately did **not** invent an app-stack assignment for Sif (e.g.
+giving it some of Amaterasu's stacks) — the existing plan has always been
+NAS, not a fourth general-purpose app host, and that's still the plan.
+Bringing it into `docker-hosts` is about Ansible management and monitoring
+consistency, not about running application stacks there.
 
 ### P330 Tiny — set aside for now
 Was weighing this box (i7-8700T, 6c/12t, 32GB RAM) as a replacement for Holo,

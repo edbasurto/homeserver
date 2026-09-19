@@ -18,7 +18,7 @@ Environment name: **Johto** (Semaphore project, tag prefixes, future DNS zone)
 | Kutone | Raspberry Pi 3B+ | NUT server (UPS monitoring) | 192.168.50.12 | **Live, verified.** Ubuntu Server 24.04.5 LTS. Still powered from a wall outlet, not the UPS itself (see Open Items). |
 | Lycagon | ASRock Z490M-ITX/ac | OPNsense edge router (not configured) | — | QSFP+ NIC installed, needs a QSA adapter for 10G to the switch. Switch side is ready now — this is the next actionable physical task. |
 | Fenrir | Synology RS815 | NAS (DSM) | — | Existing, stable, outside the active migration. |
-| Sif | ThinkCentre M910s | Migration source → future NAS | 192.168.50.125 | Still running the OLD flat pre-consolidation stack. To be wiped and rebuilt (Ubuntu, not TrueNAS) once Amaterasu/Holo are fully cut over. |
+| Sif | ThinkCentre M910s | Ansible-managed + future NAS | 192.168.50.125 | **Legacy stack wiped, now Ansible-managed.** warning-core (agents) running, confirmed healthy in Prometheus/NUT/Tailscale. Actual NAS storage role (Samba/NFS shares) still pending — the 20TB drive isn't installed yet. |
 | Zinogre | Intel NUC | Game server | — | Currently running Palworld. Redundant with Amaterasu as a game host — planned to consolidate game-server duty onto Amaterasu eventually. Not urgent, not being worked on yet. |
 | P330 Tiny | i7-8700T (6c/12t), 32GB RAM | **On hold** | — | Hit an intermittent boot/POST reliability issue during testing (unresolved). Pulled the Quadro P620 out of it and moved that into Amaterasu regardless — the chassis itself is set aside for now rather than a blocker on anything else moving forward. |
 
@@ -48,6 +48,7 @@ replaced with a stack-based Ansible-managed structure:
 | warning-core | holo | Prometheus, Grafana (core) + agents | **Live** |
 | good-day-so-epic | chibiterasu | (sandbox — intentionally empty) | **Live** (empty by design) |
 | warning-core | chibiterasu | node-exporter, cadvisor, dozzle, dashdot (agents only) | **Live** |
+| warning-core | sif | node-exporter, cadvisor, dozzle, dashdot (agents only) | **Live** |
 
 ### Ansible Roles
 - **initialize** — system packages, pip deps, sudo setup. Now handles Ubuntu 24.04's PEP 668
@@ -58,8 +59,8 @@ replaced with a stack-based Ansible-managed structure:
 - **containers** — copies compose files, starts stacks in correct order
 - **nut-client** (new) — installs `nut-client`, sets `MODE=netclient`, points `upsmon` at
   Kutone's NUT server as a slave monitor. Tagged `nut-client` so it can run standalone. Applied
-  to `docker-hosts` in the playbook — confirmed active on all three hosts now (holo, chibiterasu,
-  amaterasu all connecting to Kutone).
+  to `docker-hosts` in the playbook — confirmed active on all four hosts now (holo, chibiterasu,
+  amaterasu, sif all connecting to Kutone).
 - **tailscale** (new) — adds Tailscale's official apt repo, installs, enables `tailscaled`, and
   joins the tailnet under each host's inventory name. Idempotent — checks `tailscale ip -4`
   first and skips hosts already connected. Tagged `tailscale`, applied to a dedicated
@@ -67,7 +68,7 @@ replaced with a stack-based Ansible-managed structure:
   details.
 
 ### Inventory (`inventory`)
-- Group: `[docker-hosts]` — amaterasu, holo (local), chibiterasu
+- Group: `[docker-hosts]` — amaterasu, holo (local), chibiterasu, sif
 - holo uses `ansible_connection=local` — **playbook must be run from holo**, manually via SSH
   for now (not yet through Semaphore — see Known Open Items)
 - `[misc_hosts]` (new) — non-Docker infra hosts managed piecemeal, outside the main
@@ -228,8 +229,9 @@ like it wasn't happening. Four phases now, each with its own checklist.
 - [x] Remote access (Tailscale): fleet-wide rollout, tagged devices for unattended infra
 - [ ] UPS batteries swapped (funds-gated) — then move Kutone's own power to the UPS's Critical
       outlet bank
-- [ ] NAS backup solution + a real 3-2-1 strategy — Sif still needs to be wiped and rebuilt as
-      the actual NAS; nothing is backed up anywhere right now beyond what's already noted
+- [ ] NAS backup solution + a real 3-2-1 strategy — Sif is Ansible-managed now (2026-09-19,
+      legacy stack wiped, warning-core running), but the actual NAS storage/share role is
+      still pending; nothing is backed up anywhere right now beyond what's already noted
       per-service. The intended storage is a 20TB drive, not yet installed — needs its own
       health check (SMART + surface scan) once it goes in. A 1TB WD Blue currently in Sif was
       only ever a SATA cabling/port test (confirmed working); it has a real, repeatable bad

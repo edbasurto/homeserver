@@ -61,7 +61,7 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 | **Kutone** | Raspberry Pi 3B+ | UPS monitoring (NUT server) | 🟢 Live |
 | **Lycagon** | ASRock Z490M-ITX/ac | Edge router (OPNsense) | ⚪ Not yet configured |
 | **Fenrir** | Synology RS815 | NAS | 🟢 In service |
-| **Sif** | Lenovo ThinkCentre M910s | Future NAS rebuild | 🟡 Migration source, still on the old stack |
+| **Sif** | Lenovo ThinkCentre M910s | Ansible-managed, future NAS | 🟢 Live — legacy stack wiped, warning-core running; NAS storage pending a drive install |
 | **Zinogre** | Intel NUC | Game server (Palworld) | 🟢 Live — game-server duty planned to move to Amaterasu eventually |
 
 All three Docker hosts (Amaterasu, Holo, Chibiterasu) are now fully deployed and verified on the stack-based architecture above — the last piece to land was Amaterasu, which turned out to already be most of the way there once actually audited, rather than the ground-up migration originally assumed.
@@ -207,7 +207,8 @@ Secrets live in `ansible-vault`-encrypted `host_vars/*/vault.yml` files — noth
 **Phase 3 — Resilience** 🟡 *in progress*
 - [x] UPS monitoring (NUT) — verified end-to-end, every host connected
 - [ ] UPS batteries swapped, Kutone moved to the UPS's protected outlet
-- [ ] NAS backup solution + a real 3-2-1 strategy (Sif rebuild)
+- [ ] NAS backup solution + a real 3-2-1 strategy — Sif is Ansible-managed now, but the
+      actual storage/share role is blocked on installing its 20TB drive
 
 **Phase 4 — Scale** *(later)*
 - [ ] K3s cluster (repurposed NUC workers + a dedicated control plane) in a DeskPi RackMate T1
