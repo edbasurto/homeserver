@@ -19,6 +19,7 @@ Environment name: **Johto** (Semaphore project, tag prefixes, future DNS zone)
 | Lycagon | ASRock Z490M-ITX/ac | OPNsense edge router (not configured) | — | QSFP+ NIC installed, needs a QSA adapter for 10G to the switch. Switch side is ready now — this is the next actionable physical task. |
 | Fenrir | Synology RS815 | NAS (DSM) | — | Existing, stable, outside the active migration. |
 | Sif | ThinkCentre M910s | Migration source → future NAS | 192.168.50.125 | Still running the OLD flat pre-consolidation stack. To be wiped and rebuilt (Ubuntu, not TrueNAS) once Amaterasu/Holo are fully cut over. |
+| Zinogre | Intel NUC | Game server | — | Currently running Palworld. Redundant with Amaterasu as a game host — planned to consolidate game-server duty onto Amaterasu eventually. Not urgent, not being worked on yet. |
 | P330 Tiny | i7-8700T (6c/12t), 32GB RAM | **On hold** | — | Hit an intermittent boot/POST reliability issue during testing (unresolved). Pulled the Quadro P620 out of it and moved that into Amaterasu regardless — the chassis itself is set aside for now rather than a blocker on anything else moving forward. |
 
 ---

@@ -62,6 +62,7 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 | **Lycagon** | ASRock Z490M-ITX/ac | Edge router (OPNsense) | ⚪ Not yet configured |
 | **Fenrir** | Synology RS815 | NAS | 🟢 In service |
 | **Sif** | Lenovo ThinkCentre M910s | Future NAS rebuild | 🟡 Migration source, still on the old stack |
+| **Zinogre** | Intel NUC | Game server (Palworld) | 🟢 Live — game-server duty planned to move to Amaterasu eventually |
 
 All three Docker hosts (Amaterasu, Holo, Chibiterasu) are now fully deployed and verified on the stack-based architecture above — the last piece to land was Amaterasu, which turned out to already be most of the way there once actually audited, rather than the ground-up migration originally assumed.
 
