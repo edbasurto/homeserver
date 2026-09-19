@@ -286,3 +286,12 @@ like it wasn't happening. Four phases now, each with its own checklist.
       needs no supplemental power. Maxwell architecture, same driver-support timeline as the
       P620's Pascal (both feature-complete through driver 580, security-only after). Not
       started — a "when you want to" task, no blocker left.
+- [ ] **Frigate NVR** (deferred idea, not decided) — centralize security cameras. Amaterasu is
+      the likely host, but detection should run on a **Coral TPU** (already planned as a
+      purchase), not the shared P620 — Frigate's object detection runs continuously the whole
+      time cameras are active, unlike Jellyfin's on-demand transcoding, and would contend for
+      the P620's 2GB VRAM if it ran there instead. A spare **8TB 3.5" HDD** is earmarked for
+      recording storage (well-suited to Frigate's continuous-write pattern — no SSD wear
+      concern), kept separate from other services' data — **needs a full health check (SMART +
+      self-test) before it's trusted with real footage**, same as every other drive in this
+      project. Camera compatibility not evaluated yet. Not started.
