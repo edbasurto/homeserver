@@ -73,6 +73,7 @@
     fenrir_ip: 192.168.50.14
     fenrir_restic_path: backups
     fenrir_ssh_user: ookami
+    restic_version: "0.19.1"
   roles:
     - restic-backup
 

@@ -11,12 +11,49 @@
 # — the public key this generates has to be added to Fenrir's
 # ~/.ssh/authorized_keys by hand, once, outside this role.
 
-- name: Install restic and sqlite3
+- name: Remove any apt-installed restic (Ubuntu's is 0.12.1, too old)
+  apt:
+    name: restic
+    state: absent
+
+- name: Install sqlite3 and bzip2
   apt:
     name:
-      - restic
       - sqlite3
+      - bzip2
     state: present
+
+# Deliberately NOT installing restic via apt -- Ubuntu 24.04 ships 0.12.1,
+# which predates RESTIC_SSH_COMMAND support entirely (added in 0.15.2+).
+# Every SFTP connection silently fell back to a bare default `ssh` call
+# with no custom key/known_hosts, always failing, no matter what the env
+# file said. Installing a real current release directly instead.
+- name: Check installed restic version
+  ansible.builtin.command: restic version
+  register: restic_installed_version
+  failed_when: false
+  changed_when: false
+
+- name: Download restic {{ restic_version }} release
+  get_url:
+    url: "https://github.com/restic/restic/releases/download/v{{ restic_version }}/restic_{{ restic_version }}_linux_amd64.bz2"
+    dest: /tmp/restic.bz2
+    mode: "0644"
+  when: restic_version not in restic_installed_version.stdout
+
+- name: Decompress restic binary
+  ansible.builtin.command: bzip2 -d -f /tmp/restic.bz2
+  when: restic_version not in restic_installed_version.stdout
+
+- name: Install restic binary to /usr/local/bin
+  ansible.builtin.copy:
+    src: /tmp/restic
+    dest: /usr/local/bin/restic
+    remote_src: yes
+    owner: root
+    group: root
+    mode: "0755"
+  when: restic_version not in restic_installed_version.stdout
 
 - name: Ensure /etc/restic exists
   file:
