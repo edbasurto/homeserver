@@ -288,6 +288,59 @@ public access via a Cloudflare Tunnel was reverted.
 
 ---
 
+## Backups (3-2-1) — restic to Fenrir, 2026-09-21
+
+The "2" in the 3-2-1 plan is now live: Amaterasu backs up to Fenrir nightly via `restic`, over
+SFTP, on an automated systemd timer. New `roles/restic-backup`, deployed to Amaterasu only.
+
+- **Scope**: Immich, Home Assistant, Mealie, Actual Budget. Deliberately excludes Jellyfin
+  (media is replaceable, not worth the space/bandwidth) and Nextcloud (deployed but not
+  actually in use yet — will be added once it is).
+- **Per-service mechanics**: Postgres-backed services (Immich) get a `pg_dump` first — never
+  snapshot a live Postgres data directory directly. SQLite-backed services (Home Assistant,
+  Mealie, Actual Budget) get a `sqlite3 .backup` first, same reasoning — a raw copy of a live
+  SQLite file can catch it mid-write and come back corrupt. The `pg_dump` step uses the
+  container's own `$POSTGRES_USER`/`$POSTGRES_DB` env vars rather than hardcoding credentials
+  into the script.
+- **Retention**: 14 daily / 8 weekly / 6 monthly snapshots, pruned automatically after each run
+  to actually reclaim space on Fenrir rather than let it grow unbounded.
+- **Fenrir-side setup** (manual, since Fenrir isn't Ansible-managed): a dedicated `backups`
+  shared folder (Recycle Bin left off deliberately — restic already handles its own
+  versioning, a second retention layer at the filesystem level would just silently prevent
+  pruned space from actually being reclaimed), SFTP enabled (a separate toggle from plain SSH —
+  Control Panel > File Services > FTP > SFTP tab), and DSM's "User Home" service enabled (no
+  home directory existed for the account at all until this was turned on, which is also where
+  `~/.ssh/authorized_keys` has to live).
+- **First real backup confirmed working**, 2026-09-21: 270 files, 232MiB backed up (154MiB
+  stored after dedup/compression), snapshot saved and retention policy applied cleanly.
+
+**Real bugs hit and fixed getting here** (six, not one — worth recording since several were
+non-obvious):
+1. Missing `BatchMode=yes` on the SSH command meant a failed key-auth attempt silently fell
+   back to waiting for a password prompt that would never come, hanging forever instead of
+   failing fast.
+2. An unquoted env-file value containing spaces (`RESTIC_SSH_COMMAND=ssh -i ... -o ...`) broke
+   when the file was sourced as a shell script — only the first word was taken as the value.
+3. Root has no `/root/.ssh` on Amaterasu, so `StrictHostKeyChecking=accept-new` had nowhere to
+   persist the accepted host key. Fixed by pointing `UserKnownHostsFile` at
+   `/etc/restic/known_hosts` instead of depending on root's home directory existing.
+4. Ubuntu 24.04's apt-installed restic is **0.12.1**, which predates `RESTIC_SSH_COMMAND`
+   support entirely (added in 0.15.2+) — it was being silently ignored on every single
+   connection attempt. Fixed by installing restic 0.19.1 directly from GitHub releases instead
+   of relying on the stale apt package.
+5. Even on 0.19.1, `RESTIC_SSH_COMMAND` still wasn't taking effect reliably. Rebuilt the role
+   around explicitly passing `-o sftp.command="..."` on every restic invocation instead of
+   depending on env-var auto-detection — version-independent and easy to verify.
+6. The systemd service had no `$HOME` set (systemd services don't inherit a shell HOME by
+   default), and restic refuses to run without one to derive its cache directory from. Added
+   `Environment=HOME=/root` to the service unit.
+- Also, mid-task: a `docker exec immich-postgres printenv` command run to verify env var names
+  accidentally printed `POSTGRES_PASSWORD` in plaintext to a tool output. Same incident class
+  as the earlier vault leak — stopped immediately, flagged, rotated `immich_pg_password`
+  (DB password changed via a trusted local `docker exec` connection, vault updated, redeployed).
+
+---
+
 ## Roadmap Progress
 
 Restructured 2026-09-18 — the old "Phase 1 (current)" label was swallowing basically the
@@ -330,34 +383,29 @@ like it wasn't happening. Four phases now, each with its own checklist.
 - [x] Kutone moved to the UPS's Critical (battery-backed) outlet bank
 - [ ] UPS batteries swapped (funds-gated) — the one remaining gap: current batteries still
       can't hold a real outage, regardless of which outlet anything is on
-- [ ] NAS backup solution + a real 3-2-1 strategy — Sif is Ansible-managed now (2026-09-19,
-      legacy stack wiped, warning-core running), but the actual NAS storage/share role is still
-      pending; nothing is backed up anywhere right now beyond what's already noted per-service.
-      **The "1" copy is a 26TB Western Digital Red Pro (model WD260KFGX)** — corrects the
-      earlier "20TB" placeholder — brand new, gift, now physically installed internally in
-      Sif's one 3.5" bay (the plan all along; internal SATA is also the more reliable choice
-      for a drive meant to be written to rarely and protected). Health-checked clean before
-      settling on this plan: tested two spare 8TB drives first in that same bay as candidates
-      (a WD80EMAZ — perfectly clean, 0 reallocated/pending/uncorrectable — and a Seagate
-      ST8000NM0055 — passing, but 16 reallocated sectors on record), neither of which turned out
-      to be needed for this role once the 26TB drive was confirmed. The 1TB WD Blue tested
-      before either of those was only ever a SATA cabling/port test (confirmed working then
-      superseded).
-  - **Both spare 8TB drives are earmarked for reuse, not sitting idle** — deferred idea, not
-    decided: a rack-mounted hot-swap 2-bay dock (USB/eSATA) in the DeskPi RackMate T1, attached
-    to Chibiterasu rather than Holo (avoids adding I/O dependency to the control plane) or
-    Zinogre (its role is already slated to fold into Amaterasu eventually). Deliberately not a
-    3D-printed internal case mod on a Tiny — Chibiterasu is routinely wiped/rebuilt for staging
-    validation, and an externally-docked drive survives that; an internally-fitted one risks an
-    accidental reformat during a routine rebuild. If used as an active backup target, the
-    cleaner WD drive should carry the heavier write load, not the Seagate with its existing wear.
-  - **Longer-term idea, not started**: a spare Z370-I Mini-ITX (currently a gaming PC at work)
-    repurposed as a proper dedicated NAS host — more native SATA ports and headroom than any
-    Tiny/NUC, could house both 8TB drives internally. Real logistics involved (retrieve it,
-    decommission its current role, likely a case change), so treated as a future upgrade path,
-    not today's answer.
-  - **Fenrir (Synology RS815)** is also part of the eventual 3-2-1 picture — existing, stable,
-    not yet folded into an actual documented backup strategy.
+- [x] NAS backup solution + a real 3-2-1 strategy — the "2" is done: restic backs up Amaterasu
+      to Fenrir nightly, verified working. See the dedicated "Backups (3-2-1)" section above.
+      **The "1" copy is a 26TB Western Digital Red Pro (model WD260KFGX)**, internal SATA in
+      Sif's one 3.5" bay — brand new, a gift, deliberately kept write-infrequent to protect its
+      longevity/value.
+  - **The two spare 8TB drives have real, decided roles now — the hot-swap-dock idea is
+    shelved, not needed.** The Seagate ST8000NM0055 (16 reallocated sectors) went to Amaterasu
+    as Jellyfin's media drive — matched deliberately to the lower-stakes role, since Backblaze's
+    own drive-failure research shows any nonzero reallocated-sector count is a real elevated
+    near-term failure signal, and Jellyfin's media is explicitly replaceable if that happens.
+    The clean WD80EMAZ (0 reallocated/pending/uncorrectable across the board) is held in
+    reserve for the higher-stakes backup role instead.
+  - **A third spare surfaced 2026-09-20**: a 1TB WD1003FBYX-01Y7B0 (WD RE4 enterprise line),
+    health-checked clean, currently sitting in Sif temporarily with no assigned role yet.
+  - **The K3s cluster plan (M700 control plane + 3x NUC workers) was dropped outright**,
+    2026-09-20 — no real use case ever materialized, and a friend's suggestion to replace
+    Ansible with Kubernetes entirely prompted a full reconsideration that concluded K8s's real
+    advantages don't pay off at this fleet's scale/shape. See DECISIONS.md. This frees the M700
+    entirely — now earmarked for a 3D-printed NAS mod (its M.2 slot carries real SATA, unlike
+    newer Tinys) to finally put the WD80EMAZ to use, not yet built.
+  - **Fenrir (Synology RS815)** is the "2" — RAID5 across four 3TB drives (~8TB usable), all
+    four bays populated. Not in Ansible's inventory (different platform, managed via its own
+    DSM UI/apps).
 
 ### Phase 4 — Scale (later)
 - [ ] Permanent 2.5G switch (Zyxel XMG1915-10E top candidate, ~$170-190), QSFP uplink to Lycagon

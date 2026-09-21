@@ -427,3 +427,58 @@ outage today — a crashed/hung/rebooting Amaterasu, a Docker daemon issue,
 etc. — which is most of the realistic failure modes, just not literally all
 of them. The remaining gap (actual outage survival) still needs the battery
 swap, which stays funds-gated and its own separate task.
+
+## Backups / 3-2-1
+
+### Tool: restic, not plain rsync
+Decided 2026-09-19. Restic gives encryption, deduplication, and real
+versioning (multiple recoverable points in time) essentially for free —
+plain rsync would just mirror the latest state, no protection against
+"deleted the wrong thing three days ago" or ransomware encrypting files in
+place. Worth the small extra operational complexity over rsync given what's
+actually being protected (Immich's photo library, Home Assistant's config
+and history, financial data in Actual Budget).
+
+### Which spare 8TB drive went where, and why
+Two spare drives, both health-checked: a WD80EMAZ (perfectly clean, 0
+reallocated/pending/uncorrectable) and a Seagate ST8000NM0055 (16
+reallocated sectors, still SMART-passing). The Seagate went to Amaterasu as
+Jellyfin's media drive; the WD stays in reserve for the actual backup role.
+
+This isn't "give the healthier drive to whatever seems more important" —
+it's matching failure *probability* against failure *consequence*.
+Backblaze's own drive-failure research found reallocated sector count
+(SMART 5) is the single strongest predictor they've identified: a drive
+with any nonzero count has only ~85% survival over the next 8 months vs.
+>99% for zero (backblaze.com/blog/hard-drive-smart-stats). Jellyfin's media
+is explicitly replaceable — low consequence if that drive fails. The
+backup-target role protects genuinely irreplaceable data — high
+consequence. The higher-risk drive belongs in the lower-stakes role, not
+the other way around.
+
+Got this wrong twice in conversation before landing here (recommended the
+WD, reversed to the Seagate for the wrong reason — a factual error about
+which drive was physically free — then finally landed on this properly-
+reasoned version). Worth remembering so it doesn't get re-litigated.
+
+### Fenrir's shared folder: Recycle Bin left off
+The `backups` shared folder (the restic repository target) deliberately
+does not have DSM's Recycle Bin enabled. Restic already handles its own
+retention (14 daily / 8 weekly / 6 monthly, pruned automatically) — a
+second retention layer at the filesystem level doesn't add protection here,
+it just means pruned/deleted pack files silently keep consuming space in a
+hidden `#recycle` folder instead of actually being reclaimed, since nothing
+in this share is ever touched by hand (it's entirely machine-managed).
+
+### Two DSM settings had to be found and enabled the hard way
+Neither is obvious from "SSH is enabled":
+- **SFTP is a separate toggle from plain SSH** — Control Panel > File
+  Services > FTP > SFTP tab. SSH login can work fine (and did) while the
+  SFTP subsystem specifically is still disabled, failing with a generic
+  "subsystem request failed on channel 0" that gives no hint what's
+  actually wrong.
+- **DSM's "User Home" service** has to be enabled before any local user
+  (including a long-standing admin-equivalent account) actually gets a real
+  home directory on disk. Without it, SSH auth still succeeds, but there's
+  nowhere for `~/.ssh/authorized_keys` to live — fails with "Could not
+  chdir to home directory... No such file or directory."
