@@ -43,7 +43,7 @@ done
 # below since they're already captured safely (and consistently) via the
 # staged .backup copies above — backing up the live file too would just be
 # a redundant, potentially-inconsistent copy of the same data.
-restic backup \
+restic -o sftp.command="$FENRIR_SFTP_COMMAND" backup \
     "$STAGING" \
     "$IMMICH_DATA_MOUNT" \
     "$MEALIE_DATA_MOUNT" \
@@ -54,6 +54,6 @@ restic backup \
 
 # Keep the last 14 daily, 8 weekly, 6 monthly snapshots; prune anything
 # older to actually reclaim space on Fenrir.
-restic forget --keep-daily 14 --keep-weekly 8 --keep-monthly 6 --prune
+restic -o sftp.command="$FENRIR_SFTP_COMMAND" forget --keep-daily 14 --keep-weekly 8 --keep-monthly 6 --prune
 
 rm -rf "$STAGING"

@@ -81,13 +81,26 @@
       (DSM Control Panel > User > Advanced, or SSH in directly):
       {{ fenrir_restic_pubkey.stdout }}
 
+- name: Compute the SFTP command used to reach Fenrir
+  # Passed explicitly as -o sftp.command on every restic invocation rather
+  # than relied on as an auto-detected env var (RESTIC_SSH_COMMAND) -- got
+  # bitten once already by Ubuntu's stale apt-installed restic silently
+  # ignoring that env var entirely. Explicit and version-independent.
+  set_fact:
+    fenrir_sftp_command: >-
+      ssh -i /home/{{ username }}/.ssh/fenrir-restic
+      -o StrictHostKeyChecking=accept-new
+      -o UserKnownHostsFile=/etc/restic/known_hosts
+      -o BatchMode=yes -o ConnectTimeout=10
+      {{ fenrir_ssh_user }}@{{ fenrir_ip }} -s sftp
+
 - name: Write restic environment file from vault
   copy:
     dest: /etc/restic/env
     content: |
       RESTIC_REPOSITORY=sftp:{{ fenrir_ssh_user }}@{{ fenrir_ip }}:{{ fenrir_restic_path }}
       RESTIC_PASSWORD={{ restic_repository_password }}
-      RESTIC_SSH_COMMAND="ssh -i /home/{{ username }}/.ssh/fenrir-restic -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/etc/restic/known_hosts -o BatchMode=yes -o ConnectTimeout=10"
+      FENRIR_SFTP_COMMAND={{ fenrir_sftp_command }}
     owner: root
     group: root
     mode: "0600"
@@ -130,20 +143,20 @@
 
 - name: Check whether the restic repository is already initialized
   ansible.builtin.command:
-    cmd: restic snapshots
+    cmd: >-
+      restic -o sftp.command="{{ fenrir_sftp_command }}" snapshots
   environment:
     RESTIC_REPOSITORY: "sftp:{{ fenrir_ssh_user }}@{{ fenrir_ip }}:{{ fenrir_restic_path }}"
     RESTIC_PASSWORD: "{{ restic_repository_password }}"
-    RESTIC_SSH_COMMAND: "ssh -i /home/{{ username }}/.ssh/fenrir-restic -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/etc/restic/known_hosts -o BatchMode=yes -o ConnectTimeout=10"
   register: restic_snapshots_check
   failed_when: false
   changed_when: false
 
 - name: Initialize the restic repository on Fenrir (first run only)
   ansible.builtin.command:
-    cmd: restic init
+    cmd: >-
+      restic -o sftp.command="{{ fenrir_sftp_command }}" init
   environment:
     RESTIC_REPOSITORY: "sftp:{{ fenrir_ssh_user }}@{{ fenrir_ip }}:{{ fenrir_restic_path }}"
     RESTIC_PASSWORD: "{{ restic_repository_password }}"
-    RESTIC_SSH_COMMAND: "ssh -i /home/{{ username }}/.ssh/fenrir-restic -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/etc/restic/known_hosts -o BatchMode=yes -o ConnectTimeout=10"
   when: restic_snapshots_check.rc != 0
