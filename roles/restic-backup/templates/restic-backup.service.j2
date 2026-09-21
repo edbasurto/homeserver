@@ -5,6 +5,7 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
+Environment=HOME=/root
 EnvironmentFile=/etc/restic/env
 ExecStart=/usr/local/bin/run-backups.sh
 # Don't let a stuck sftp connection or a huge pg_dump hang forever
