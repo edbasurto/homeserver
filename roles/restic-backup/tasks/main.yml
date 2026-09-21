@@ -50,7 +50,7 @@
     content: |
       RESTIC_REPOSITORY=sftp:{{ fenrir_ssh_user }}@{{ fenrir_ip }}:{{ fenrir_restic_path }}
       RESTIC_PASSWORD={{ restic_repository_password }}
-      RESTIC_SSH_COMMAND=ssh -i /home/{{ username }}/.ssh/fenrir-restic -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=10
+      RESTIC_SSH_COMMAND="ssh -i /home/{{ username }}/.ssh/fenrir-restic -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=10"
     owner: root
     group: root
     mode: "0600"
