@@ -323,6 +323,34 @@ hard-to-reproduce fault isn't worth delaying UPS batteries or getting
 Chibiterasu/Amaterasu onto the new architecture, which matter more right now.
 Holo stays on the NUC7i5BNK until/unless this gets revisited.
 
+### K3s cluster — dropped, not just deferred (2026-09-20)
+The Phase 4 roadmap item (M700 control plane + 3x repurposed NUC i5-7260U
+workers) is cancelled outright, not just pushed back. Two real reasons:
+
+1. **No actual use case.** The plan was learning-driven from the start, and
+   that motivation didn't hold up — no real-world (work or home) scenario to
+   apply it to.
+2. **A friend's homelab prompted a genuine reconsideration** (replacing
+   Ansible with a full Kubernetes/GitOps setup) — worked through honestly
+   rather than dismissed. Conclusion: K8s's headline advantages (node-failure
+   resilience, self-healing, dynamic scheduling) mostly don't pay off at this
+   fleet's actual scale (3-4 Docker-capable hosts, known stable workloads)
+   and workload shape (personal, stateful, single-instance services — Immich,
+   Nextcloud, Jellyfin, etc. — not the stateless/high-replica-count workloads
+   K8s is built to shine with). The real blocker: nearly every service here
+   is genuinely stateful, and vanilla K8s node-failure resilience doesn't
+   apply to stateful workloads without also standing up real distributed
+   storage (Longhorn/Rook-Ceph) — a whole additional complex subsystem,
+   arguably heavier than what it replaces.
+
+Staying on Ansible + Docker Compose. The M700 is now fully free — earmarked
+for a 3D-printed NAS mod (its M.2 slot carries SATA, unlike newer Tinys)
+hosting the healthy spare 8TB WD80EMAZ, rack-mounted in the DeskPi
+RackMate T1. Not yet built as of 2026-09-20 — still needs confirming the
+M.2 slot is actually free (vs. already hosting the boot drive) and sourcing
+a separate power source for the drive (Tiny PCs have no internal PSU with
+spare SATA/Molex power, unlike a real desktop PSU).
+
 ### GPU: Quadro P620 in Amaterasu
 The P330 Tiny's GPU (confirmed via physical inspection: Quadro P620, Pascal,
 2GB, ~40W, slot-powered) was pulled and installed in Amaterasu for Jellyfin

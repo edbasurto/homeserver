@@ -360,8 +360,6 @@ like it wasn't happening. Four phases now, each with its own checklist.
     not yet folded into an actual documented backup strategy.
 
 ### Phase 4 — Scale (later)
-- [ ] K3s cluster (M700 control plane + 3x repurposed NUC i5-7260U workers) in a DeskPi
-      RackMate T1 — hostnames still TBD
 - [ ] Permanent 2.5G switch (Zyxel XMG1915-10E top candidate, ~$170-190), QSFP uplink to Lycagon
 - [x] Configure Jellyfin GPU passthrough for the P620 — done 2026-09-19, see GPU / Hardware
       Pipeline above

@@ -213,7 +213,6 @@ Secrets live in `ansible-vault`-encrypted `host_vars/*/vault.yml` files — noth
       actual storage/share role is blocked on installing its 20TB drive
 
 **Phase 4 — Scale** *(later)*
-- [ ] K3s cluster (repurposed NUC workers + a dedicated control plane) in a DeskPi RackMate T1
 - [ ] Permanent 2.5G switch, QSFP uplink to Lycagon
 
 Full status detail lives in [`PROGRESS.md`](PROGRESS.md); the reasoning behind non-obvious choices is in [`DECISIONS.md`](DECISIONS.md).
