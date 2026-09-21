@@ -1,0 +1,112 @@
+---
+# Backs up Immich, Home Assistant, Mealie, and Actual Budget from Amaterasu
+# to Fenrir (the "2" in the 3-2-1 plan) via restic over SFTP. Deliberately
+# excludes Jellyfin (replaceable media) and Nextcloud (not in use yet).
+#
+# Vault vars required in host_vars/amaterasu/vault.yml:
+#   restic_repository_password  — the restic repo's own encryption password,
+#                                  NOT the Fenrir account's login password
+#
+# Fenrir itself isn't Ansible-managed (different platform, see DECISIONS.md)
+# — the public key this generates has to be added to Fenrir's
+# ~/.ssh/authorized_keys by hand, once, outside this role.
+
+- name: Install restic and sqlite3
+  apt:
+    name:
+      - restic
+      - sqlite3
+    state: present
+
+- name: Ensure /etc/restic exists
+  file:
+    path: /etc/restic
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Generate a dedicated SSH keypair for reaching Fenrir
+  ansible.builtin.command:
+    cmd: ssh-keygen -t ed25519 -f /home/{{ username }}/.ssh/fenrir-restic -N "" -C "restic@amaterasu"
+    creates: /home/{{ username }}/.ssh/fenrir-restic
+
+- name: Read the generated public key
+  ansible.builtin.command:
+    cmd: cat /home/{{ username }}/.ssh/fenrir-restic.pub
+  register: fenrir_restic_pubkey
+  changed_when: false
+
+- name: Show the public key that needs adding to Fenrir's authorized_keys
+  debug:
+    msg: >-
+      Add this to {{ fenrir_ssh_user }}'s ~/.ssh/authorized_keys on Fenrir
+      (DSM Control Panel > User > Advanced, or SSH in directly):
+      {{ fenrir_restic_pubkey.stdout }}
+
+- name: Write restic environment file from vault
+  copy:
+    dest: /etc/restic/env
+    content: |
+      RESTIC_REPOSITORY=sftp:{{ fenrir_ssh_user }}@{{ fenrir_ip }}:{{ fenrir_restic_path }}
+      RESTIC_PASSWORD={{ restic_repository_password }}
+      RESTIC_SSH_COMMAND=ssh -i /home/{{ username }}/.ssh/fenrir-restic -o StrictHostKeyChecking=accept-new
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Deploy the backup script
+  copy:
+    src: "{{ role_path }}/templates/run-backups.sh.j2"
+    dest: /usr/local/bin/run-backups.sh
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Install the restic-backup systemd service
+  template:
+    src: restic-backup.service.j2
+    dest: /etc/systemd/system/restic-backup.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload systemd
+
+- name: Install the restic-backup systemd timer
+  template:
+    src: restic-backup.timer.j2
+    dest: /etc/systemd/system/restic-backup.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload systemd
+
+- name: Flush handlers so the timer can be enabled below
+  meta: flush_handlers
+
+- name: Enable and start the restic-backup timer
+  systemd:
+    name: restic-backup.timer
+    daemon_reload: yes
+    enabled: yes
+    state: started
+
+- name: Check whether the restic repository is already initialized
+  ansible.builtin.command:
+    cmd: restic snapshots
+  environment:
+    RESTIC_REPOSITORY: "sftp:{{ fenrir_ssh_user }}@{{ fenrir_ip }}:{{ fenrir_restic_path }}"
+    RESTIC_PASSWORD: "{{ restic_repository_password }}"
+    RESTIC_SSH_COMMAND: "ssh -i /home/{{ username }}/.ssh/fenrir-restic -o StrictHostKeyChecking=accept-new"
+  register: restic_snapshots_check
+  failed_when: false
+  changed_when: false
+
+- name: Initialize the restic repository on Fenrir (first run only)
+  ansible.builtin.command:
+    cmd: restic init
+  environment:
+    RESTIC_REPOSITORY: "sftp:{{ fenrir_ssh_user }}@{{ fenrir_ip }}:{{ fenrir_restic_path }}"
+    RESTIC_PASSWORD: "{{ restic_repository_password }}"
+    RESTIC_SSH_COMMAND: "ssh -i /home/{{ username }}/.ssh/fenrir-restic -o StrictHostKeyChecking=accept-new"
+  when: restic_snapshots_check.rc != 0

@@ -1,0 +1,59 @@
+#!/bin/bash
+# Ansible-managed — do not edit by hand, edit roles/restic-backup/templates/run-backups.sh.j2
+#
+# Backs up Immich, Home Assistant, Mealie, and Actual Budget to Fenrir via
+# restic. Deliberately excludes Jellyfin (media is replaceable) and
+# Nextcloud (not actually in use yet).
+#
+# Postgres-backed services get a proper pg_dump first — never snapshot a
+# live Postgres data directory directly. SQLite-backed services get a
+# `sqlite3 .backup` first, for the same reason (a raw copy of a live SQLite
+# file can catch it mid-write and come back corrupt).
+
+set -euo pipefail
+
+STAGING="/var/backups/restic-staging"
+rm -rf "$STAGING"
+mkdir -p "$STAGING/actual-budget"
+
+# --- Immich: Postgres dump ---
+# Uses the container's OWN env vars ($POSTGRES_USER/$POSTGRES_DB) so this
+# script never has to know or handle the actual password value.
+docker exec immich-postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "$STAGING/immich-postgres.sql"
+
+# --- Immich: upload library (plain files, safe to copy directly) ---
+IMMICH_DATA_MOUNT=$(docker volume inspect hyperdimension-library_immich_data --format '{{.Mountpoint}}')
+
+# --- Home Assistant: SQLite, consistent snapshot via .backup ---
+sqlite3 /docker/configs/homeassistant/home-assistant_v2.db ".backup '$STAGING/home-assistant_v2.db'"
+
+# --- Mealie: SQLite, consistent snapshot via .backup ---
+MEALIE_DATA_MOUNT=$(docker volume inspect hyperdimension-library_mealie_data --format '{{.Mountpoint}}')
+sqlite3 "$MEALIE_DATA_MOUNT/mealie.db" ".backup '$STAGING/mealie.db'"
+
+# --- Actual Budget: SQLite (one file per budget), consistent snapshot ---
+ACTUAL_DATA_MOUNT=$(docker volume inspect spicy-queen-ctrl_actual-budget_data --format '{{.Mountpoint}}')
+for db in "$ACTUAL_DATA_MOUNT"/server-files/*.sqlite; do
+    [ -e "$db" ] || continue
+    sqlite3 "$db" ".backup '$STAGING/actual-budget/$(basename "$db")'"
+done
+
+# --- Run the actual backup ---
+# The raw .db/.sqlite files are excluded from the direct volume backups
+# below since they're already captured safely (and consistently) via the
+# staged .backup copies above — backing up the live file too would just be
+# a redundant, potentially-inconsistent copy of the same data.
+restic backup \
+    "$STAGING" \
+    "$IMMICH_DATA_MOUNT" \
+    "$MEALIE_DATA_MOUNT" \
+    "$ACTUAL_DATA_MOUNT/user-files" \
+    --exclude="$MEALIE_DATA_MOUNT/mealie.db" \
+    --tag amaterasu \
+    --tag scheduled
+
+# Keep the last 14 daily, 8 weekly, 6 monthly snapshots; prune anything
+# older to actually reclaim space on Fenrir.
+restic forget --keep-daily 14 --keep-weekly 8 --keep-monthly 6 --prune
+
+rm -rf "$STAGING"

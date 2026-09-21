@@ -1,0 +1,11 @@
+[Unit]
+Description=Restic backup to Fenrir
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/restic/env
+ExecStart=/usr/local/bin/run-backups.sh
+# Don't let a stuck sftp connection or a huge pg_dump hang forever
+TimeoutStartSec=2h

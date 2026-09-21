@@ -64,6 +64,18 @@
   roles:
     - discord-monitor-bot
 
+- name: Restic backups to Fenrir (Amaterasu -> Fenrir, the "2" in 3-2-1)
+  hosts: amaterasu
+  become: yes
+
+  tags: [restic-backup]
+  vars:
+    fenrir_ip: 192.168.50.14
+    fenrir_restic_path: backups
+    fenrir_ssh_user: ookami
+  roles:
+    - restic-backup
+
 #    - name: install net-tools
 #      apt:
 #        install: net-tools
