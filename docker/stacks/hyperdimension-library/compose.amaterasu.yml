@@ -28,7 +28,7 @@ services:
     volumes:
       - /docker/configs/jellyfin:/config
       - jellyfin_data:/data
-      - /mnt/jellyfin-media:/media
+      - /mnt/jellyfin-media-8tb:/media
     networks:
       - default
       - proxy
