@@ -179,8 +179,9 @@ services:
       - default
       - proxy
     ports:
-      - "8080:8080" # qbittorrent WebUI, published here since qbittorrent
-                     # has no ports/network section of its own
+      - "8090:8080" # qbittorrent WebUI, published here since qbittorrent
+                     # has no ports/network section of its own -- host port
+                     # 8080 was already taken by cadvisor (warning-core)
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
