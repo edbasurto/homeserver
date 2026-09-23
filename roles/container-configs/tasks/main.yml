@@ -74,10 +74,37 @@
 # Env files — amaterasu
 # Vault vars required in host_vars/amaterasu/vault.yml:
 #   tousou-gate:             authentik_secret_key, authentik_pg_password
-#   hyperdimension-library:  immich_pg_password
+#   hyperdimension-library:  immich_pg_password, pia_openvpn_user, pia_openvpn_password
 #   osaki-ni-cloud:          nextcloud_pg_password, nextcloud_admin_user, nextcloud_admin_password
 #   devs-talk:               (none — holo only)
 # ==============================
+
+- name: Ensure config directories exist for the *arr/download pipeline (Amaterasu)
+  file:
+    path: "/docker/configs/{{ item }}"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: "0750"
+  loop:
+    - qbittorrent
+    - prowlarr
+    - sonarr
+    - radarr
+    - bazarr
+    - jellyseerr
+  when: inventory_hostname == "amaterasu"
+
+- name: Ensure gluetun's config directory exists (Amaterasu)
+  # Owned by root, not 1000:1000 -- gluetun runs as root internally (needs
+  # NET_ADMIN to manage the VPN tunnel), unlike the PUID/PGID-based *arr apps.
+  file:
+    path: /docker/configs/gluetun
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: inventory_hostname == "amaterasu"
 
 - name: Write tousou-gate env file on amaterasu
   copy:
@@ -104,6 +131,8 @@
       DB_PASSWORD={{ immich_pg_password }}
       DB_DATABASE_NAME=immich
       REDIS_HOSTNAME=immich-redis
+      OPENVPN_USER={{ pia_openvpn_user }}
+      OPENVPN_PASSWORD={{ pia_openvpn_password }}
     owner: root
     group: root
     mode: "0600"

@@ -149,6 +149,169 @@ services:
     ports:
       - "9925:9000"
 
+  # --- Download automation pipeline ---
+  # qbittorrent's traffic is deliberately NOT on the default/proxy networks --
+  # its network_mode below ties it entirely to gluetun's network namespace,
+  # so it has zero network access at all if the VPN tunnel isn't up. That's
+  # the actual killswitch: not a setting, just an architectural fact of how
+  # container networking works.
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "gluetun"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    env_file: .env.amaterasu
+    environment:
+      - VPN_SERVICE_PROVIDER=private internet access
+      - VPN_TYPE=openvpn
+      - SERVER_REGIONS=US East
+    volumes:
+      - /docker/configs/gluetun:/gluetun
+    networks:
+      - default
+      - proxy
+    ports:
+      - "8080:8080" # qbittorrent WebUI, published here since qbittorrent
+                     # has no ports/network section of its own
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "qbittorrent"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    depends_on:
+      - gluetun
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+      - WEBUI_PORT=8080
+    volumes:
+      - /docker/configs/qbittorrent:/config
+      - /mnt/downloads:/downloads
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "prowlarr"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - /docker/configs/prowlarr:/config
+    networks:
+      - default
+      - proxy
+    ports:
+      - "9696:9696"
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "sonarr"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - /docker/configs/sonarr:/config
+      - /mnt/downloads:/downloads
+      - /mnt/jellyfin-media-8tb/TVShows:/tv
+    networks:
+      - default
+      - proxy
+    ports:
+      - "8989:8989"
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "radarr"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - /docker/configs/radarr:/config
+      - /mnt/downloads:/downloads
+      - /mnt/jellyfin-media-8tb/Movies:/movies
+    networks:
+      - default
+      - proxy
+    ports:
+      - "7878:7878"
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "bazarr"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - /docker/configs/bazarr:/config
+      - /mnt/jellyfin-media-8tb/TVShows:/tv
+      - /mnt/jellyfin-media-8tb/Movies:/movies
+    networks:
+      - default
+      - proxy
+    ports:
+      - "6767:6767"
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "jellyseerr"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    environment:
+      - TZ=America/Los_Angeles
+    volumes:
+      - /docker/configs/jellyseerr:/app/config
+    networks:
+      - default
+      - proxy
+    ports:
+      - "5055:5055"
+
 volumes:
   jellyfin_data:
   calibre_data:
