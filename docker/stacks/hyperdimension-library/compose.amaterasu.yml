@@ -246,7 +246,9 @@ services:
       - default
       - proxy
     ports:
-      - "8989:8989"
+      - "8994:8989" # host 8989 was already taken by Home Assistant
+                     # (network_mode: host binds it directly, outside
+                     # Docker's normal port-mapping -- easy to miss)
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
