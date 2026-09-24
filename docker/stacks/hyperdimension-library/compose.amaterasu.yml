@@ -204,6 +204,23 @@ services:
       - /docker/configs/qbittorrent:/config
       - /mnt/downloads:/downloads
 
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "hyperdimension-library"
+      com.ookami.service: "flaresolverr"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    environment:
+      - LOG_LEVEL=info
+      - TZ=America/Los_Angeles
+    networks:
+      - default
+    ports:
+      - "8191:8191"
+
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
