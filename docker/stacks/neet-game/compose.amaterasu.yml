@@ -18,5 +18,31 @@ services:
     ports:
       - "25565:25565"
 
+  pelican-panel:
+    image: ghcr.io/pelican/panel:latest
+    container_name: pelican-panel
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "neet-game"
+      com.ookami.service: "pelican-panel"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - XDG_DATA_HOME=/pelican-data
+      # Plain HTTP on a non-standard port, matching how everything else in
+      # this fleet is reached -- no LetsEncrypt cert needed for a LAN-only
+      # panel, and port 80/443 are already Traefik's on this host anyway.
+      - APP_URL=http://192.168.50.180:8100
+      - ADMIN_EMAIL=ed@basurto.org
+    volumes:
+      - pelican-data:/pelican-data
+      - pelican-logs:/var/www/html/storage/logs
+    ports:
+      - "8100:80"
+
 volumes:
   minecraft_data:
+  pelican-data:
+  pelican-logs:
