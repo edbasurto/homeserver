@@ -39,6 +39,10 @@ services:
     volumes:
       - pelican-data:/pelican-data
       - pelican-logs:/var/www/html/storage/logs
+      - pelican-plugins:/var/www/html/plugins # persists installed plugins
+                                                # across container recreation --
+                                                # matches Pelican's own
+                                                # reference compose-bind.yml
     ports:
       - "8100:8100" # Caddy binds internally to whatever port is embedded
                      # in APP_URL, not always 80 -- confirmed via netstat
@@ -49,3 +53,4 @@ volumes:
   minecraft_data:
   pelican-data:
   pelican-logs:
+  pelican-plugins:
