@@ -40,7 +40,10 @@ services:
       - pelican-data:/pelican-data
       - pelican-logs:/var/www/html/storage/logs
     ports:
-      - "8100:80"
+      - "8100:8100" # Caddy binds internally to whatever port is embedded
+                     # in APP_URL, not always 80 -- confirmed via netstat
+                     # inside the container after the first deploy guessed
+                     # wrong (mapped 8100:80, nothing was listening on 80)
 
 volumes:
   minecraft_data:
