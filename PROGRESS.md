@@ -341,6 +341,44 @@ non-obvious):
 
 ---
 
+## Authentik — fixed a silent non-functional deployment, 2026-09-25
+
+`authentik-server` and `authentik-worker` had been running (in the `docker ps` sense) since the
+tousou-gate rewrite, but neither had ever actually finished starting up — both were stuck in an
+infinite connection-retry loop from the moment they were first deployed. Because Authentik
+retries instead of exiting on a failed dependency connection, this never showed up as a restart
+or a crash — just "Up N days" forever, quietly non-functional the whole time. Found by chance
+while spot-checking container health (dashdot/portainer) and noticing `authentik-worker`'s
+restart count was in the thousands.
+
+**Three separate bugs, all pre-existing (not introduced by the tousou-gate rewrite itself)**:
+1. `AUTHENTIK_POSTGRESQL__HOST` was never set. Authentik defaults to `127.0.0.1` when it's
+   missing, so the worker was endlessly retrying Postgres on its own loopback instead of the
+   `authentik-postgres` container. Fixed by adding the var explicitly in
+   `roles/container-configs/tasks/main.yml`.
+2. Same bug, same fix, for Redis: `AUTHENTIK_REDIS__HOST` was also never set, so both
+   `authentik-server` and `authentik-worker` were separately stuck retrying Redis on `localhost`
+   too — this one affected the server, not just the worker, meaning the actual login/SSO service
+   itself had never come up either.
+3. `/docker/configs/authentik/{media,templates,certs}` were owned `root:root 0755` (created ad
+   hoc, before this role existed) — Authentik runs as uid 1000 internally and had no write
+   access, so the migration step failed with `PermissionError: .../media/public` every time.
+   Fixed with a proper directory-creation task, owned `1000:1000`, following the same pattern
+   already used for the *arr pipeline's config dirs.
+- A `grep` intended to check only for the `AUTHENTIK_POSTGRESQL__HOST` key name matched the
+  whole `AUTHENTIK_POSTGRESQL` prefix and printed `AUTHENTIK_POSTGRESQL__PASSWORD` in plaintext.
+  Same incident class as the Immich/restic-backup leaks — stopped, flagged, `authentik_pg_password`
+  rotated (`ALTER USER` via a trusted local `docker exec` session, vault updated, redeployed).
+- All three fixes deployed from Holo (the only host playbooks are ever run from) and verified via
+  container health/logs and a direct `pg_stat_activity` connection count — never another
+  credential-exposing check. Both containers now report `running`/`healthy` with real API traffic
+  in the logs, apparently for the first time.
+- **Authentik is not currently gating access to anything** — it was never wired into Traefik as
+  forward-auth for any service, and still isn't. The Traefik dashboard is still exposed with no
+  auth in front of it (existing open item, unchanged by this fix).
+
+---
+
 ## Roadmap Progress
 
 Restructured 2026-09-18 — the old "Phase 1 (current)" label was swallowing basically the
