@@ -22,6 +22,9 @@ services:
     networks:
       - default
       - proxy
+    ports:
+      - "8443:80" # no port had ever been published -- Nextcloud was
+                   # completely unreachable until now
 
   nextcloud-postgres:
     image: postgres:15-alpine
