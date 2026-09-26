@@ -179,6 +179,8 @@ DECISIONS.md                # the "why" behind non-obvious choices
 
 The playbook always runs **from Holo** (`ansible_connection=local` in the inventory) — it's the fleet's control plane, not any of the machines running Ansible against it.
 
+A personal Mac holding a full clone of this repo (including the gitignored vault password and SSH keys) is a **parity/disaster-recovery copy**, not a second control plane. Normal flow is still edit → commit/push → SSH to Holo → `git pull` → deploy from there. Only run Ansible directly from a personal Mac if Holo itself is unreachable — and treat that as a break-glass fallback, not a routine alternative. Whichever machine you're on, keep it on the same commit as Holo (`git pull` before assuming anything's current) rather than letting a personal clone drift into its own state.
+
 ```bash
 # 1. Holo first — it's the control plane
 ansible-playbook playbook.yml --limit holo
