@@ -157,6 +157,17 @@
     mode: "0600"
   when: inventory_hostname == "amaterasu"
 
+- name: Ensure Nextcloud's data directory exists on the 8TB drive (Amaterasu)
+  # uid/gid 33 (www-data) is what the official nextcloud image actually runs
+  # its worker processes as -- confirmed via `docker exec nextcloud id www-data`.
+  file:
+    path: /mnt/jellyfin-media-8tb/nextcloud-data
+    state: directory
+    owner: "33"
+    group: "33"
+    mode: "0750"
+  when: inventory_hostname == "amaterasu"
+
 - name: Write osaki-ni-cloud env file on amaterasu
   copy:
     dest: /docker/stacks/osaki-ni-cloud/.env.amaterasu

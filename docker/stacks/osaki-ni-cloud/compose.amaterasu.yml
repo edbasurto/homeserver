@@ -16,7 +16,9 @@ services:
     env_file: .env.amaterasu
     volumes:
       - /docker/configs/nextcloud:/var/www/html/config
-      - nextcloud_data:/var/www/html/data
+      # Bind-mounted to the 8TB drive (bulk file storage), not a Docker
+      # volume on the boot disk -- matches the Jellyfin/*arr convention.
+      - /mnt/jellyfin-media-8tb/nextcloud-data:/var/www/html/data
     networks:
       - default
       - proxy
@@ -51,7 +53,6 @@ services:
       - default
 
 volumes:
-  nextcloud_data:
   nextcloud-postgres_data:
 
 networks:

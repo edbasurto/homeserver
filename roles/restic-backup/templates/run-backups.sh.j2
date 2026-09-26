@@ -1,9 +1,8 @@
 #!/bin/bash
 # Ansible-managed — do not edit by hand, edit roles/restic-backup/templates/run-backups.sh.j2
 #
-# Backs up Immich, Home Assistant, Mealie, and Actual Budget to Fenrir via
-# restic. Deliberately excludes Jellyfin (media is replaceable) and
-# Nextcloud (not actually in use yet).
+# Backs up Immich, Home Assistant, Mealie, Actual Budget, and Nextcloud to
+# Fenrir via restic. Deliberately excludes Jellyfin (media is replaceable).
 #
 # Postgres-backed services get a proper pg_dump first — never snapshot a
 # live Postgres data directory directly. SQLite-backed services get a
@@ -38,6 +37,22 @@ for db in "$ACTUAL_DATA_MOUNT"/server-files/*.sqlite; do
     sqlite3 "$db" ".backup '$STAGING/actual-budget/$(basename "$db")'"
 done
 
+# --- Nextcloud: freeze writes for the backup window ---
+# Per Nextcloud's own backup guidance: maintenance mode stops new writes so
+# the Postgres dump and the file-tree snapshot below represent the same
+# consistent instant, rather than racing a live instance. Guaranteed back
+# off on exit via trap, even if a step below fails partway through.
+docker exec -u www-data nextcloud php occ maintenance:mode --on
+trap 'docker exec -u www-data nextcloud php occ maintenance:mode --off' EXIT
+
+# --- Nextcloud: Postgres dump ---
+docker exec nextcloud-postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "$STAGING/nextcloud-postgres.sql"
+
+# --- Nextcloud: data + config (plain files, safe to copy directly now that
+# maintenance mode has frozen writes) ---
+NEXTCLOUD_DATA_DIR="/mnt/jellyfin-media-8tb/nextcloud-data"
+NEXTCLOUD_CONFIG_DIR="/docker/configs/nextcloud"
+
 # --- Run the actual backup ---
 # The raw .db/.sqlite files are excluded from the direct volume backups
 # below since they're already captured safely (and consistently) via the
@@ -48,6 +63,8 @@ restic -o sftp.command="$FENRIR_SFTP_COMMAND" backup \
     "$IMMICH_DATA_MOUNT" \
     "$MEALIE_DATA_MOUNT" \
     "$ACTUAL_DATA_MOUNT/user-files" \
+    "$NEXTCLOUD_DATA_DIR" \
+    "$NEXTCLOUD_CONFIG_DIR" \
     --exclude="$MEALIE_DATA_MOUNT/mealie.db" \
     --tag amaterasu \
     --tag scheduled
