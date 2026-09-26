@@ -27,11 +27,11 @@ flowchart TB
     subgraph Amaterasu["🌅 Amaterasu — production"]
         direction TB
         A1["tousou-gate<br/>Traefik v3 + Authentik"]
-        A2["hyperdimension-library<br/>Jellyfin · Immich · Mealie · Calibre"]
+        A2["hyperdimension-library<br/>Jellyfin · Immich · Mealie · Calibre · *arr stack"]
         A3["osaki-ni-cloud<br/>Nextcloud"]
         A4["sunrise-mqtt-soup<br/>Home Assistant · Mosquitto"]
         A5["spicy-queen-ctrl<br/>Homarr · Portainer · Actual Budget"]
-        A6["neet-game<br/>Minecraft"]
+        A6["neet-game<br/>Minecraft · Pelican"]
     end
 
     subgraph Holo["🐺 Holo — control plane"]
@@ -62,7 +62,7 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 | **Lycagon** | ASRock Z490M-ITX/ac | Edge router (OPNsense) | ⚪ Not yet configured |
 | **Fenrir** | Synology RS815 | NAS | 🟢 In service |
 | **Sif** | Lenovo ThinkCentre M910s | Ansible-managed, future NAS | 🟢 Live — legacy stack wiped, warning-core running; NAS storage pending a drive install |
-| **Zinogre** | Intel NUC | Game server (Palworld) | 🟢 Live — game-server duty planned to move to Amaterasu eventually |
+| **Zinogre** | Intel NUC | Game server (idle) | ⚪ Stopped — Palworld migrated to Amaterasu 2026-09-25, kept as a cold fallback |
 | **Cerberus** | Cisco Catalyst 3850-48P | Core switch | 🟢 Live — reinstalled, VLANs correct fleet-wide, SSH access configured |
 | **Orthrus** | NETGEAR GS108PEv3 | Edge switch, DeskPi RackMate T1 | 🟢 Live — static IP, loop detection on, firmware current (2.06.24) |
 
@@ -130,11 +130,11 @@ Every stack name is a HANABIE song, reworked to hint at what it does.
 | Stack | Named for | What it runs |
 |---|---|---|
 | `tousou-gate` | TOUSOU | Traefik v3 reverse proxy + Authentik SSO |
-| `hyperdimension-library` | Hyperdimension Galaxy | Jellyfin, Immich, Mealie, Calibre |
+| `hyperdimension-library` | Hyperdimension Galaxy | Jellyfin, Immich, Mealie, Calibre, Prowlarr/Sonarr/Radarr/Bazarr/qBittorrent (behind gluetun/PIA)/Jellyseerr/FlareSolverr |
 | `osaki-ni-cloud` | Osaki ni Shitsurei Shimasu | Nextcloud |
 | `sunrise-mqtt-soup` | Sunrise Miso-Soup | Home Assistant, Mosquitto |
 | `spicy-queen-ctrl` | Spicy Queen | Homarr, Portainer, WhatUpDocker, Actual Budget |
-| `neet-game` | NEET GAME | Minecraft |
+| `neet-game` | NEET GAME | Minecraft, Pelican (game-server panel, for future servers) |
 | `devs-talk` | Girl's Talk | Semaphore, Forgejo, Wiki.js, Planka, code-server, MeshCentral |
 | `warning-core` | Warning!! | Prometheus + Grafana (Holo), agent-only elsewhere |
 | `good-day-so-epic` | Today's Good Day & So Epic | Sandbox — intentionally empty, Chibiterasu only |
@@ -209,8 +209,8 @@ Secrets live in `ansible-vault`-encrypted `host_vars/*/vault.yml` files — noth
 - [x] UPS monitoring (NUT) — verified end-to-end, every host connected
 - [x] Kutone moved to the UPS's protected outlet bank
 - [ ] UPS batteries swapped (funds-gated) — the one remaining gap for real outage protection
-- [ ] NAS backup solution + a real 3-2-1 strategy — Sif is Ansible-managed now, but the
-      actual storage/share role is blocked on installing its 20TB drive
+- [x] NAS backup solution + a real 3-2-1 strategy — restic backs up Amaterasu to Fenrir
+      nightly (the "2"), verified working; see PROGRESS.md for the full writeup
 
 **Phase 4 — Scale** *(later)*
 - [ ] Permanent 2.5G switch, QSFP uplink to Lycagon

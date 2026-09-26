@@ -19,7 +19,7 @@ Environment name: **Johto** (Semaphore project, tag prefixes, future DNS zone)
 | Lycagon | ASRock Z490M-ITX/ac | OPNsense edge router (not configured) | — | QSFP+ NIC installed, needs a QSA adapter for 10G to the switch. Switch side is ready now — this is the next actionable physical task. |
 | Fenrir | Synology RS815 | NAS (DSM) | — | Existing, stable, outside the active migration. |
 | Sif | ThinkCentre M910s | Ansible-managed + future NAS | 192.168.50.125 | **Legacy stack wiped, now Ansible-managed.** warning-core (agents) running, confirmed healthy in Prometheus/NUT/Tailscale. Actual NAS storage role (Samba/NFS shares) still pending — the 20TB drive isn't installed yet. |
-| Zinogre | Intel NUC | Game server | — | Currently running Palworld. Redundant with Amaterasu as a game host — planned to consolidate game-server duty onto Amaterasu eventually. Not urgent, not being worked on yet. |
+| Zinogre | Intel NUC | Game server (idle) | 192.168.50.151 | **Palworld migrated to Amaterasu 2026-09-25.** Stopped, not decommissioned — kept as a cold fallback copy of the world in case anything needs rolling back. |
 | P330 Tiny | i7-8700T (6c/12t), 32GB RAM | **On hold** | — | Hit an intermittent boot/POST reliability issue during testing (unresolved). Pulled the Quadro P620 out of it and moved that into Amaterasu regardless — the chassis itself is set aside for now rather than a blocker on anything else moving forward. |
 
 ---
@@ -406,6 +406,15 @@ like it wasn't happening. Four phases now, each with its own checklist.
   - **Fenrir (Synology RS815)** is the "2" — RAID5 across four 3TB drives (~8TB usable), all
     four bays populated. Not in Ansible's inventory (different platform, managed via its own
     DSM UI/apps).
+- [x] **Game-server duty consolidated onto Amaterasu, 2026-09-25.** Palworld moved off Zinogre
+      via its existing (separate, not-in-this-repo) Ansible pipeline, just retargeted at
+      Amaterasu — world save migrated cleanly, verified healthy post-move. Zinogre's copy is
+      stopped, kept as a fallback rather than decommissioned. Also installed **Pelican** (a
+      Pterodactyl-successor game-panel) on Amaterasu ahead of any *future* game servers — tested
+      against a disposable throwaway instance first and confirmed it covers the gameplay-setting
+      depth needed before deciding anything, but Palworld itself stays on the plain Ansible
+      pipeline rather than switching. Router port-forward (UDP 8211/27015) repointed to
+      Amaterasu's IP for external/friend access.
 
 ### Phase 4 — Scale (later)
 - [ ] Permanent 2.5G switch (Zyxel XMG1915-10E top candidate, ~$170-190), QSFP uplink to Lycagon
