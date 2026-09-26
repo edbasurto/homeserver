@@ -111,6 +111,7 @@
     dest: /docker/stacks/tousou-gate/.env.amaterasu
     content: |
       AUTHENTIK_SECRET_KEY={{ authentik_secret_key }}
+      AUTHENTIK_REDIS__HOST=authentik-redis
       AUTHENTIK_POSTGRESQL__HOST=authentik-postgres
       AUTHENTIK_POSTGRESQL__USER=authentik
       AUTHENTIK_POSTGRESQL__PASSWORD={{ authentik_pg_password }}
