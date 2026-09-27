@@ -281,6 +281,49 @@ Amaterasu. `discord_monitor_bot_env` vault var moved from
   Chibiterasu/Amaterasu on the new architecture, which are the actual priorities. Holo stays on
   the NUC until/unless this gets revisited.
 
+### Planned GPU reshuffle + local AI — decided 2026-09-27, not yet executed
+
+Researching a GPU for local AI (Ollama/llama.cpp chat + ComfyUI image generation) surfaced a real
+physical constraint on Amaterasu that changes the P620's future:
+
+- **Amaterasu's actual PCIe layout (MSI Z590 PRO WiFi)**: only **2 full-size slots** — `PCI_E1`
+  (from the CPU, fixed at **x16 regardless of what's in the other slot** — this board doesn't
+  split to x8/x8) and `PCI_E3` (from the chipset, x4 electrical). The other 2 slots are x1,
+  physically too narrow for a GPU or most SFP+ NICs. Previously assumed there was room for a
+  third card; there isn't.
+- **Also planning to add an SFP+ NIC card** to Amaterasu (separate from this AI work, but competes
+  for the same 2 slots). Net result: **the P620 has to come out** to make room for both an AI GPU
+  and the NIC. Planned allocation: GPU in `PCI_E1` (full x16, no compromise), NIC in `PCI_E3` (x4
+  electrical — plenty for a single 10G SFP+ port).
+- **AI GPU decision**: rather than buy new right away (GPU market is bad right now — a $600
+  "deal" on a full PC with an 8GB 4060 Ti priced out worse per-VRAM than buying a bare 16GB 4060
+  Ti standalone, so passed on it), using an already-owned spare in the meantime: an **HP OEM RTX
+  2080 Super (8GB GDDR6, Founders Edition PCB, blower cooler, part# L73293-001)**, confirmed
+  1x 8-pin + 1x 6-pin power (matches Amaterasu's existing spare 8-pin + a 6-pin-via-Molex adapter
+  — no PSU work needed). Chosen over two other owned spares (a GTX 1080 8GB — no Tensor Cores,
+  weaker for image gen; a GTX 2080 Ti 11GB currently in the living room PC — deliberately **not**
+  taking this one, since it's earmarked for actually playing demanding upcoming single-player
+  titles there (Monster Hunter Wilds, Silent Hill f) and both spare 20-series cards have a working
+  USB-C VirtualLink port for a planned PSVR2, so the living room use case doesn't need the
+  strongest card specifically).
+- **The 2080 Super will do double duty**: Jellyfin hardware transcoding (replacing the P620) AND
+  local AI compute, on the same card. Confirmed viable — NVENC/NVDEC are separate fixed-function
+  hardware from the CUDA/Tensor cores, so they don't meaningfully compete for the same execution
+  resources. Turing's NVENC is actually a quality upgrade over the P620's Pascal-generation
+  encoder (adds HEVC B-frame support). One caveat worth remembering later: consumer GeForce cards
+  are driver-capped at a small number of simultaneous *encode* sessions (historically 3, some
+  newer driver/card combos raised to 5) — unlike the Quadro-class P620, which has no such cap.
+  Unlikely to matter for a personal Jellyfin server's realistic concurrent-stream count; a
+  well-established community patch (`nvidia-patch` on GitHub) exists if it ever does.
+- **CUDA version note for the AI side**: fine — Turing is safely outside the Pascal/Maxwell/Volta
+  cut in CUDA 13, unlike a Pascal card would have been.
+- **P620 isn't being retired** — moving to **Chibiterasu**, using an angled PCIe riser already on
+  hand (Chibiterasu's ThinkCentre M920q chassis needs it to fit a card at all). Not yet done.
+- **Interim step before any of this**: drop the 2080 Super into Amaterasu on its own first (still
+  fits the current 2-full-slot layout with the P620 removed) to actually validate the whole
+  ComfyUI + Ollama + Jellyfin-transcoding plan works, before also committing to the SFP+ NIC
+  purchase and the P620 relocation to Chibiterasu.
+
 ---
 
 ## Remote Access — Tailscale
