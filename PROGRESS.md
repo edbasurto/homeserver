@@ -379,6 +379,51 @@ restart count was in the thousands.
 
 ---
 
+## Nextcloud — actually set up and in use, 2026-09-26
+
+Deployed for a while but never actually configured. Went through real first-time setup and fixed
+several gaps found along the way:
+
+- **Storage restructured before any real data went in**: `nextcloud_data` was an opaque Docker
+  volume on the boot disk (457GB, 336GB free) — found completely empty, so no migration was
+  needed. Switched to a bind mount at `/mnt/jellyfin-media-8tb/nextcloud-data` (6.7TB free),
+  matching the Jellyfin/*arr convention of real bind mounts on the 8TB drive for bulk file
+  storage rather than an opaque volume on the boot disk. Owned `33:33` (`www-data`, confirmed via
+  `docker exec nextcloud id www-data` — that's the uid the image's worker processes actually run
+  as), write-tested successfully before calling it done. `nextcloud-postgres_data` stays a named
+  volume on the boot disk, same as Immich's and Authentik's Postgres — no reason to move a small
+  DB just because the file storage moved.
+- **No port had ever been published** — Nextcloud was completely unreachable from the LAN despite
+  running. Published on host port **8443**.
+- **Brought into the restic-to-Fenrir backup pipeline**, previously excluded on purpose ("not
+  actually in use yet"). Same pattern as Immich: `pg_dump` for the Postgres data, plus the actual
+  data and config directories (the config dir holds `config.php`, which contains real
+  secrets/keys — needed to restore, not just the data). Wrapped in `occ maintenance:mode
+  --on/--off` (guaranteed back off via a `trap`, even on failure) so the DB dump and file
+  snapshot represent one consistent instant, per Nextcloud's own backup guidance.
+- **Setup gotcha**: `POSTGRES_DB` was missing from the env file (only `POSTGRES_USER`,
+  `POSTGRES_PASSWORD`, `POSTGRES_HOST` were set). The official image's env-var autoconfig is
+  all-or-nothing — missing one field silently drops the *entire* autoconfig, not just the DB
+  portion, so the interactive installer showed up asking for both database details and an admin
+  account to be typed in by hand, instead of completing automatically from the vault-sourced env
+  vars like it was supposed to. Worked around manually for this install (typed in the same
+  `nextcloud_admin_user`/`nextcloud_admin_password`/`nextcloud_pg_password` values already in the
+  vault); the missing `POSTGRES_DB` var itself is still open, tracked below, so a future
+  reinstall auto-configures cleanly instead of needing the same manual workaround.
+- Installed the recommended app bundle (Calendar, Contacts, Mail, Notes, Talk) — all lightweight,
+  only cost resources when actively used. Deliberately skipped **Nextcloud Office**: enabling it
+  only adds a connector, actual document editing needs a separate Collabora/CODE server (a real,
+  fairly resource-heavy LibreOffice-based Docker service) pointed at it — worth setting up
+  deliberately later if wanted, not as a drive-by checkbox.
+- Verified clean after setup: container stable (`RestartCount=0`), logs show real healthy
+  traffic — dashboard, all five installed apps' widgets responding, file previews, cron — no
+  errors.
+
+**Still open**: add `POSTGRES_DB=nextcloud` to the env file in
+`roles/container-configs/tasks/main.yml` so autoconfig completes fully on a future reinstall.
+
+---
+
 ## Roadmap Progress
 
 Restructured 2026-09-18 — the old "Phase 1 (current)" label was swallowing basically the
@@ -462,6 +507,10 @@ like it wasn't happening. Four phases now, each with its own checklist.
 
 ### Known Open Items (don't map cleanly to a phase)
 - [ ] Traefik dashboard is exposed without auth — add Authentik middleware before going live
+- [ ] Nextcloud's env file is missing `POSTGRES_DB` — the official image's autoconfig is
+      all-or-nothing, so this one missing var silently drops the whole thing, not just the DB
+      portion. Worked around manually for the initial setup (2026-09-26); add the var so a future
+      reinstall doesn't need the same manual workaround.
 - [ ] Semaphore is set up (project "Johto") but `holo`'s inventory entry is
       `ansible_connection=local` — Semaphore runs tasks *inside its own container*, which isn't
       the holo host. Needs either a separate Semaphore-facing inventory or switching holo to
