@@ -55,7 +55,7 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 
 | Host | Hardware | Role | Status |
 |---|---|---|---|
-| **Amaterasu** | MSI Z590 PRO WiFi, i5, Quadro P620 | Production | 🟢 Live — fully deployed on the new stack |
+| **Amaterasu** | MSI Z590 PRO WiFi, i5, Quadro P620, XEAL TC-1U50PD8 PSU (500W) | Production | 🟢 Live — fully deployed on the new stack |
 | **Holo** | Intel NUC7i5BNK | Ansible control plane, CI/CD, monitoring | 🟢 Live |
 | **Chibiterasu** | Lenovo ThinkCentre M920q, i7-8700T | Staging / pre-prod validation | 🟢 Live |
 | **Kutone** | Raspberry Pi 3B+ | UPS monitoring (NUT server) + Discord Site Monitor Bot | 🟢 Live — powered from the UPS's own battery-backed outlets |
