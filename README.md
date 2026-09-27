@@ -213,6 +213,8 @@ Secrets live in `ansible-vault`-encrypted `host_vars/*/vault.yml` files — noth
 - [ ] UPS batteries swapped (funds-gated) — the one remaining gap for real outage protection
 - [x] NAS backup solution + a real 3-2-1 strategy — restic backs up Amaterasu to Fenrir
       nightly (the "2"), verified working; see PROGRESS.md for the full writeup
+- [x] Nextcloud actually configured and in use — storage moved onto the 8TB drive, added to
+      the nightly restic-to-Fenrir backup — done 2026-09-26, see PROGRESS.md
 
 **Phase 4 — Scale** *(later)*
 - [ ] Permanent 2.5G switch, QSFP uplink to Lycagon
