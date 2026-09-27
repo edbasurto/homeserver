@@ -25,6 +25,35 @@ AdGuard was in the old tousou-gate compose but was dropped. OPNsense (Lycagon)
 has AdGuard Home built in — DNS filtering is handled at the network/router
 layer, not as a Docker container.
 
+### Aerohive SR2208P as a possible Orthrus replacement — a thought, not decided (2026-09-27)
+Pulled an Aerohive SR2208P (8+2 Gigabit PoE+, 124W PoE budget, dual-media
+fiber/copper uplinks) out of previous duty. Researched whether it's safe to
+run as a fully local/offline switch long-term (it was originally
+HiveManager-cloud-managed) — confirmed via Extreme's own support forum that
+losing cloud connectivity only degrades centralized manageability, never
+traffic-forwarding or configuration; the switch runs its full control plane
+on-device (HiveOS) and is reachable via local CLI/SSH and a local HTTPS web
+GUI. Real, honest caveat: this model is already past End-of-Sale and at/near
+End-of-Service-Life, so firmware is effectively frozen unless pulled via TFTP
+— a "no more updates" risk, not a cloud-lock-in one.
+
+Considered replacing Orthrus (NETGEAR GS108PEv3) with it in the DeskPi
+RackMate T1 mini rack. For the actual device mix there (2 Intel NUCs,
+Chibiterasu, possibly a Raspberry Pi and a KVM-over-IP device), the
+headline PoE-budget advantage mostly doesn't apply — none of those are
+PoE-powered unless a KVM device specifically uses a PoE HAT. The genuine
+potential benefits would be SNMP/CLI monitoring integration into
+warning-core's Prometheus/Grafana, VLAN segmentation (useful for isolating
+an out-of-band KVM device specifically), and the 2 SFP uplinks for a future
+higher-bandwidth/fiber link to the main rack. Also a real downside: it's a
+desktop form factor, not true rack-mount, so it would sit loose on top of
+the mini rack rather than being properly mounted like Orthrus is.
+
+**Not committing to this yet** — noted here as a live option, not a decision.
+If it happens, keep the NETGEAR as a cold shelf-spare rather than discarding
+it, as a hedge against the Aerohive's actual hardware failing outright
+(a real EOL-hardware risk, separate from the cloud-dependency question).
+
 ---
 
 ## Stack Decisions
