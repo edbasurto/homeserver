@@ -131,6 +131,24 @@ Both directions work now:
   the current batteries are still worn enough that the whole UPS drops almost immediately on a
   real outage regardless of outlet bank, so that specific gap still needs the battery swap.
   Everything else (Amaterasu crashing, a hung Docker daemon, a bad reboot) is already covered.
+- **Fenrir added as a NUT client, 2026-09-26**: previously had zero UPS monitoring at all — an
+  outage would have hard-cut its drives with no graceful shutdown. Synology DSM's UPS client
+  (Control Panel > Hardware & UPS > UPS) can act as a real NUT client against a third-party
+  server, but it hardcodes both the values it looks for: the UPS device must be named literally
+  `ups`, and it connects as user `monuser` / password `secret` — neither of which existed on
+  Kutone. Fixed by renaming the device from `cyberpower` to `ups` in `/etc/nut/ups.conf` (a pure
+  label, doesn't touch the driver/hardware — confirmed via `upsc ups` reporting identically to
+  the old `upsc cyberpower`) and swapping the systemd driver instance
+  (`nut-driver@cyberpower.service` → `nut-driver@ups.service`), plus adding a second
+  `monuser`/`secret` entry to `upsd.users` alongside the existing `upsmon` one. Since
+  `nut_ups_name` already drove every docker-host's `MONITOR` line via a shared Ansible var
+  (`group_vars/all/vars.yml`), the rename was a one-line change + fleet-wide `--tags nut-client`
+  redeploy — all four docker-hosts (Amaterasu, Holo, Chibiterasu, Sif) picked up `ups@192.168.50.12`
+  cleanly, verified via `nut-monitor`'s own journal (`Startup successful`, correctly reading the
+  real low-battery condition) rather than just trusting the deploy's exit code. Fenrir itself
+  isn't Ansible-managed, so its side was manual: Control Panel > Hardware & UPS > UPS > Enable UPS
+  support > type "Synology UPS server" > IP `192.168.50.12`. Confirmed live afterward — DSM shows
+  the real CyberPower model, status, charge, and runtime.
 
 ---
 

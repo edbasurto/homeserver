@@ -210,6 +210,9 @@ Secrets live in `ansible-vault`-encrypted `host_vars/*/vault.yml` files — noth
 **Phase 3 — Resilience** 🟡 *in progress*
 - [x] UPS monitoring (NUT) — verified end-to-end, every host connected
 - [x] Kutone moved to the UPS's protected outlet bank
+- [x] Fenrir added as a NUT client too (DSM's own UPS support, pointed at Kutone's NUT server) —
+      done 2026-09-26, closes the last gap where an outage could hard-cut its drives; see
+      PROGRESS.md
 - [ ] UPS batteries swapped (funds-gated) — the one remaining gap for real outage protection
 - [x] NAS backup solution + a real 3-2-1 strategy — restic backs up Amaterasu to Fenrir
       nightly (the "2"), verified working; see PROGRESS.md for the full writeup
