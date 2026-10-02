@@ -32,6 +32,7 @@ flowchart TB
         A4["sunrise-mqtt-soup<br/>Home Assistant · Mosquitto"]
         A5["spicy-queen-ctrl<br/>Homarr · Portainer · Actual Budget"]
         A6["neet-game<br/>Minecraft · Pelican"]
+        A7["knowledge-is-blooming<br/>Obsidian LiveSync (CouchDB)"]
     end
 
     subgraph Holo["🐺 Holo — control plane"]
@@ -132,6 +133,7 @@ Every stack name is a HANABIE song, reworked to hint at what it does.
 | `tousou-gate` | TOUSOU | Traefik v3 reverse proxy + Authentik SSO |
 | `hyperdimension-library` | Hyperdimension Galaxy | Jellyfin, Immich, Mealie, Calibre, Prowlarr/Sonarr/Radarr/Bazarr/qBittorrent (behind gluetun/PIA)/Jellyseerr/FlareSolverr |
 | `osaki-ni-cloud` | Osaki ni Shitsurei Shimasu | Nextcloud |
+| `knowledge-is-blooming` | Kaika Sengen "Cherry Blossoms Are Blooming" | Self-hosted Obsidian LiveSync (CouchDB) |
 | `sunrise-mqtt-soup` | Sunrise Miso-Soup | Home Assistant, Mosquitto |
 | `spicy-queen-ctrl` | Spicy Queen | Homarr, Portainer, WhatUpDocker, Actual Budget |
 | `neet-game` | NEET GAME | Minecraft, Pelican (game-server panel, for future servers) |

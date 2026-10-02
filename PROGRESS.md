@@ -485,6 +485,50 @@ several gaps found along the way:
 
 ---
 
+## knowledge-is-blooming — self-hosted Obsidian LiveSync, 2026-10-02
+
+New stack on Amaterasu: CouchDB backing the `Self-hosted LiveSync` Obsidian plugin, replacing
+paid Obsidian Sync, based on a well-regarded r/selfhosted guide. Deliberately **not** on Fenrir
+(the restic backup *target* — live primary data doesn't belong on the same box as the backups),
+and reached via **Tailscale** rather than a public reverse proxy/Cloudflare Tunnel (already tried
+and reverted once in this project — see DECISIONS.md).
+
+- **Config applied via a templated `local.ini`** (`docker/configs/couchdb/local.ini`), not the
+  guide's manual admin-UI clicking — the official image auto-loads any `.ini` dropped in
+  `/opt/couchdb/etc/local.d`, so this is proper infra-as-code instead of a one-time GUI step
+  nobody will remember how to redo.
+- **Two real bugs found and fixed that the guide's manual setup flow would have silently papered
+  over**:
+  1. The data directory was created `root:root` — the official image's actual runtime process
+     runs as uid/gid **5984** after root-level entrypoint setup. It could write files the
+     entrypoint itself had already created, but failed with "No DB shards could be opened...
+     permission denied" trying to create a *new* database afterward. Fixed by owning the bind
+     mount `5984:5984` from the start.
+  2. Never created CouchDB's required system databases (`_users`, `_replicator`,
+     `_global_changes`) — clicking "Configure as Single Node" in the admin UI does this
+     invisibly; a declarative Ansible replacement has to do it explicitly, or auth/replication
+     machinery throws internal errors despite the server otherwise looking healthy. Added as an
+     idempotent task (pinned `?n=1`, since this is permanently single-node — avoids CouchDB's
+     default "wants 3 replicas" log warning).
+- **Database creation is a declarative, idempotent `uri` task** (`PUT` with `status_code: [201,
+  412]`), not a manual "click Create Database" step.
+- **Backup**: added to the existing restic-to-Fenrir pipeline as a plain directory copy — no
+  maintenance-mode/dump step needed, unlike the Postgres/Nextcloud cases. CouchDB's storage
+  engine is append-only with atomic compaction-swap by design, explicitly safe to copy live.
+  Verified via a real manual backup run (CouchDB's data directory confirmed present in the
+  resulting snapshot).
+- Verified end-to-end on the backend side: container healthy, all 4 databases return 200, the 9
+  guide config values confirmed actually applied (not just written to a file nobody checked), and
+  a full idempotent redeploy (`changed=0, failed=0`).
+- **Still open (user's own follow-up, not Ansible-manageable)**: installing the Obsidian app +
+  Self-hosted LiveSync plugin on each device, pointed at Amaterasu's Tailscale IP, with the
+  end-to-end encryption passphrase set client-side.
+- Side effect: researched and committed `hanabie-discography.md`, a deduplicated reference of
+  every known HANABIE song/EP/album title (annotated with which are already in use as stack
+  names), so future naming doesn't rely on guessing titles from memory.
+
+---
+
 ## Roadmap Progress
 
 Restructured 2026-09-18 — the old "Phase 1 (current)" label was swallowing basically the
