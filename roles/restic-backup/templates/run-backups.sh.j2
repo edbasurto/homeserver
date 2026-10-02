@@ -1,8 +1,9 @@
 #!/bin/bash
 # Ansible-managed — do not edit by hand, edit roles/restic-backup/templates/run-backups.sh.j2
 #
-# Backs up Immich, Home Assistant, Mealie, Actual Budget, and Nextcloud to
-# Fenrir via restic. Deliberately excludes Jellyfin (media is replaceable).
+# Backs up Immich, Home Assistant, Mealie, Actual Budget, Nextcloud, and
+# CouchDB (Obsidian LiveSync) to Fenrir via restic. Deliberately excludes
+# Jellyfin (media is replaceable).
 #
 # Postgres-backed services get a proper pg_dump first — never snapshot a
 # live Postgres data directory directly. SQLite-backed services get a
@@ -53,6 +54,12 @@ docker exec nextcloud-postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"
 NEXTCLOUD_DATA_DIR="/mnt/jellyfin-media-8tb/nextcloud-data"
 NEXTCLOUD_CONFIG_DIR="/docker/configs/nextcloud"
 
+# --- CouchDB (Obsidian LiveSync): plain directory copy ---
+# Unlike Postgres/SQLite/Nextcloud above, CouchDB's storage engine is
+# append-only with atomic compaction-swap by design -- it's explicitly safe
+# to copy its data directory live, no maintenance-mode/dump step needed.
+COUCHDB_DATA_DIR="/docker/configs/couchdb/data"
+
 # --- Run the actual backup ---
 # The raw .db/.sqlite files are excluded from the direct volume backups
 # below since they're already captured safely (and consistently) via the
@@ -65,6 +72,7 @@ restic -o sftp.command="$FENRIR_SFTP_COMMAND" backup \
     "$ACTUAL_DATA_MOUNT/user-files" \
     "$NEXTCLOUD_DATA_DIR" \
     "$NEXTCLOUD_CONFIG_DIR" \
+    "$COUCHDB_DATA_DIR" \
     --exclude="$MEALIE_DATA_MOUNT/mealie.db" \
     --tag amaterasu \
     --tag scheduled

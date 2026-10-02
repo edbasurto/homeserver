@@ -31,6 +31,32 @@
     - spicy-queen-ctrl
     - neet-game
     - warning-core
+    - knowledge-is-blooming
+  when: inventory_hostname == "amaterasu"
+
+# CouchDB's database can't be created until the container is actually up and
+# serving, which doesn't happen until the "Start amaterasu stacks" task
+# above runs -- container-configs (which writes config/env files) runs in an
+# earlier play, before anything is actually started, so this has to live here
+# instead.
+- name: Wait for CouchDB to accept connections before creating the database
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:5984/_up"
+    status_code: 200
+  register: _couchdb_up
+  retries: 10
+  delay: 3
+  until: _couchdb_up.status == 200
+  when: inventory_hostname == "amaterasu"
+
+- name: Ensure the obsidian CouchDB database exists (idempotent)
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:5984/obsidian"
+    method: PUT
+    user: "{{ couchdb_user }}"
+    password: "{{ couchdb_password }}"
+    force_basic_auth: true
+    status_code: [201, 412]
   when: inventory_hostname == "amaterasu"
 
 # ==============================

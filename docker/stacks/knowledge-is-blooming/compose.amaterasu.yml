@@ -1,0 +1,26 @@
+name: knowledge-is-blooming
+
+services:
+  couchdb:
+    image: couchdb:latest
+    container_name: couchdb
+    restart: unless-stopped
+    labels:
+      com.ookami.stack: "knowledge-is-blooming"
+      com.ookami.service: "couchdb"
+      com.ookami.owner: "homelab"
+      com.ookami.environment: "prod"
+    env_file: .env.amaterasu
+    volumes:
+      - /docker/configs/couchdb/data:/opt/couchdb/data
+      - /docker/configs/couchdb/etc/local.d:/opt/couchdb/etc/local.d
+    # No proxy network -- not routed through Traefik. Reached directly via
+    # LAN IP or (for off-LAN devices) Amaterasu's Tailscale IP, same as the
+    # rest of the fleet's non-Traefik-routed services.
+    ports:
+      - "5984:5984"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail -s -u $$COUCHDB_USER:$$COUCHDB_PASSWORD http://localhost:5984/_up | grep -Eo '\"status\":\"ok\"' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -19,6 +19,7 @@
     - spicy-queen-ctrl
     - neet-game
     - warning-core
+    - knowledge-is-blooming
   when: inventory_hostname == "amaterasu"
 
 # ==============================
