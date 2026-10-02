@@ -186,11 +186,17 @@
   when: inventory_hostname == "amaterasu"
 
 - name: Ensure CouchDB data/config directories exist on amaterasu (knowledge-is-blooming)
+  # uid/gid 5984 is the official couchdb image's internal runtime user --
+  # the erlang/beam process drops to it after root-level entrypoint setup,
+  # so the HOST-side bind-mount root must already be writable by it, or
+  # creating any new database's shard files fails with permission denied
+  # (confirmed live: existing system files were owned 5984:5984 already,
+  # but the parent dir was root:root and blocked new subdirectory creation).
   file:
     path: "/docker/configs/couchdb/{{ item }}"
     state: directory
-    owner: root
-    group: root
+    owner: "5984"
+    group: "5984"
     mode: "0750"
   loop:
     - data

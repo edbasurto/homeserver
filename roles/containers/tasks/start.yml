@@ -54,6 +54,25 @@
   until: _couchdb_up.status == 200
   when: inventory_hostname == "amaterasu"
 
+# Equivalent of clicking "Configure as Single Node" in the setup wizard --
+# creates CouchDB's required system databases. Without these, auth and
+# replication machinery throws internal errors even though the server
+# otherwise looks like it's running fine (confirmed live: _users missing
+# caused "No DB shards could be opened" on unrelated database requests).
+- name: Ensure CouchDB system databases exist (idempotent)
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:5984/{{ item }}"
+    method: PUT
+    user: "{{ couchdb_user }}"
+    password: "{{ couchdb_password }}"
+    force_basic_auth: true
+    status_code: [201, 412]
+  loop:
+    - _users
+    - _replicator
+    - _global_changes
+  when: inventory_hostname == "amaterasu"
+
 - name: Ensure the obsidian CouchDB database exists (idempotent)
   ansible.builtin.uri:
     url: "http://127.0.0.1:5984/obsidian"
