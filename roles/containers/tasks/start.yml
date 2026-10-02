@@ -60,8 +60,11 @@
 # otherwise looks like it's running fine (confirmed live: _users missing
 # caused "No DB shards could be opened" on unrelated database requests).
 - name: Ensure CouchDB system databases exist (idempotent)
+  # n=1 explicitly -- this is permanently single-node, no need to let
+  # CouchDB default to wanting 3 replicas and log a harmless but noisy
+  # "only 1 node(s)" warning on every creation attempt.
   ansible.builtin.uri:
-    url: "http://127.0.0.1:5984/{{ item }}"
+    url: "http://127.0.0.1:5984/{{ item }}?n=1"
     method: PUT
     user: "{{ couchdb_user }}"
     password: "{{ couchdb_password }}"
@@ -75,7 +78,7 @@
 
 - name: Ensure the obsidian CouchDB database exists (idempotent)
   ansible.builtin.uri:
-    url: "http://127.0.0.1:5984/obsidian"
+    url: "http://127.0.0.1:5984/obsidian?n=1"
     method: PUT
     user: "{{ couchdb_user }}"
     password: "{{ couchdb_password }}"
