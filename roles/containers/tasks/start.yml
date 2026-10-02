@@ -40,8 +40,13 @@
 # earlier play, before anything is actually started, so this has to live here
 # instead.
 - name: Wait for CouchDB to accept connections before creating the database
+  # /_up itself requires auth once require_valid_user is set (see local.ini),
+  # so this needs credentials too, not just a bare reachability check.
   ansible.builtin.uri:
     url: "http://127.0.0.1:5984/_up"
+    user: "{{ couchdb_user }}"
+    password: "{{ couchdb_password }}"
+    force_basic_auth: true
     status_code: 200
   register: _couchdb_up
   retries: 10
@@ -129,5 +134,4 @@
 
 - debug:
     var: music_bot_output
-  when: inventory_hostname == 'amaterasu'
   when: inventory_hostname == 'amaterasu'
