@@ -537,6 +537,16 @@ and reverted once in this project — see DECISIONS.md).
   literal leading space and never matched the real `Origin` header the app sends. Fixed in the
   repo's `docker/configs/couchdb/local.ini` (comma-separated, no spaces) so a future redeploy
   doesn't silently reintroduce it.
+- **Found a second, more structural bug fixing the first one**: redeploying the corrected
+  `local.ini` showed `changed` in the Ansible output, but the live config hadn't actually
+  changed — `community.docker.docker_compose_v2`'s `state: present` only recreates a container
+  when the *compose file* changes, not when a bind-mounted config file's *contents* change, so
+  the fix sat completely inert. Confirmed via `docker inspect`'s `StartedAt`: the container
+  hadn't restarted since its original deploy two days earlier. A manual `docker restart` picked
+  up the correct config immediately. Fixed properly (not just worked around) by adding a
+  `restart couchdb` handler (`roles/container-configs/handlers/main.yml`) notified by the
+  `local.ini` copy task, so any future config edit automatically restarts the container instead
+  of silently doing nothing.
 - Side effect: researched and committed `hanabie-discography.md`, a deduplicated reference of
   every known HANABIE song/EP/album title (annotated with which are already in use as stack
   names), so future naming doesn't rely on guessing titles from memory.

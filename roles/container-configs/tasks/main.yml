@@ -210,6 +210,7 @@
     owner: root
     group: root
     mode: "0644"
+  notify: restart couchdb
   when: inventory_hostname == "amaterasu"
 
 - name: Write knowledge-is-blooming env file on amaterasu

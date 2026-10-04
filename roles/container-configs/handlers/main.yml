@@ -1,0 +1,18 @@
+---
+
+# Docker Compose's "state: present" only recreates a container when the
+# compose file itself changes -- a bind-mounted config file's *contents*
+# changing (like this one) is invisible to it, so CouchDB would otherwise
+# silently keep running on stale config indefinitely. Confirmed live
+# 2026-10-03: a local.ini fix sat completely inert for two days because of
+# exactly this.
+- name: restart couchdb
+  # ignore_errors: this role runs BEFORE the containers role ever creates
+  # the container on a first-ever deploy, so "not found" here is expected
+  # and harmless -- the containers role starts it fresh immediately after,
+  # already with the correct (just-written) config.
+  community.docker.docker_container:
+    name: couchdb
+    state: started
+    restart: true
+  ignore_errors: true
