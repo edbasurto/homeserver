@@ -523,6 +523,20 @@ and reverted once in this project — see DECISIONS.md).
 - **Still open (user's own follow-up, not Ansible-manageable)**: installing the Obsidian app +
   Self-hosted LiveSync plugin on each device, pointed at Amaterasu's Tailscale IP, with the
   end-to-end encryption passphrase set client-side.
+- **Added real HTTPS, 2026-10-03** — the mobile app requires it (won't do plain HTTP at all).
+  Used `tailscale serve --bg --tls-terminated-tcp=443 tcp://localhost:5984` rather than a
+  reverse proxy: Tailscale issues a real Let's Encrypt cert for Amaterasu's MagicDNS name
+  (`amaterasu.tail53c02.ts.net`) and terminates TLS at the TCP level, so CouchDB itself never
+  needs to know or care it's being reached over TLS — no proxy headers, no extra CouchDB-side
+  config. Required enabling "HTTPS Certificates" in the Tailscale admin console first (account-
+  level setting, not something `tailscale cert` can do on its own). Devices now connect via
+  `https://amaterasu.tail53c02.ts.net` instead of the plain-HTTP LAN address.
+- **Found a real bug in `local.ini` via the plugin's own "Check server requirements"
+  diagnostic**: `cors.origins` had spaces after the commas (`app://a, capacitor://b`) —
+  CouchDB's CORS matching doesn't trim whitespace, so every origin after the first carried a
+  literal leading space and never matched the real `Origin` header the app sends. Fixed in the
+  repo's `docker/configs/couchdb/local.ini` (comma-separated, no spaces) so a future redeploy
+  doesn't silently reintroduce it.
 - Side effect: researched and committed `hanabie-discography.md`, a deduplicated reference of
   every known HANABIE song/EP/album title (annotated with which are already in use as stack
   names), so future naming doesn't rely on guessing titles from memory.
