@@ -520,9 +520,14 @@ and reverted once in this project — see DECISIONS.md).
 - Verified end-to-end on the backend side: container healthy, all 4 databases return 200, the 9
   guide config values confirmed actually applied (not just written to a file nobody checked), and
   a full idempotent redeploy (`changed=0, failed=0`).
-- **Still open (user's own follow-up, not Ansible-manageable)**: installing the Obsidian app +
-  Self-hosted LiveSync plugin on each device, pointed at Amaterasu's Tailscale IP, with the
-  end-to-end encryption passphrase set client-side.
+- **Client-side setup — done, 2026-10-04**: Obsidian + Self-hosted LiveSync installed and
+  confirmed syncing across Mac, Windows, and iPhone. First device (Mac) configured manually
+  against the HTTPS Tailscale URL; subsequent devices onboarded via the plugin's own "Setup
+  URI" export/import instead of repeating the full manual flow. Recommended settings landed on
+  during setup: E2EE on with "Generate a random ID key" (not the legacy passphrase-tied
+  default) and Obfuscate Properties enabled — both free, zero-cost choices made before any real
+  data existed, closing an existing privacy gap (base E2EE protects note content but not
+  file/folder metadata on its own).
 - **Added real HTTPS, 2026-10-03** — the mobile app requires it (won't do plain HTTP at all).
   Used `tailscale serve --bg --tls-terminated-tcp=443 tcp://localhost:5984` rather than a
   reverse proxy: Tailscale issues a real Let's Encrypt cert for Amaterasu's MagicDNS name
