@@ -20,39 +20,36 @@ networks:
 **Consequence:** tousou-gate must always start before any other stack on
 amaterasu. This is enforced in `roles/containers/tasks/start.yml`.
 
-### AdGuard Home not in any stack
-AdGuard was in the old tousou-gate compose but was dropped. OPNsense (Lycagon)
-has AdGuard Home built in — DNS filtering is handled at the network/router
-layer, not as a Docker container.
+### AdGuard Home runs as an OPNsense plugin, not a container (2026-10-08)
+AdGuard was in the old tousou-gate compose but was dropped when the stacks were
+restructured, which left the network with no DNS filtering after the router
+moved to OPNsense (Lycagon). It's now deployed there as the community plugin
+`os-adguardhome-maxit` rather than as a Docker container, because DNS is the one
+service everything depends on and the router is already the box that must be up:
+a container would tie all DNS to a Docker host, and Amaterasu rebooted five times
+in two days. Clients also query it directly, so per-client logs show real IPs.
+An earlier note here claimed OPNsense has AdGuard Home built in — it doesn't; the
+plugin lives in a third-party repository.
 
-### Aerohive SR2208P as a possible Orthrus replacement — a thought, not decided (2026-09-27)
-Pulled an Aerohive SR2208P (8+2 Gigabit PoE+, 124W PoE budget, dual-media
-fiber/copper uplinks) out of previous duty. Researched whether it's safe to
-run as a fully local/offline switch long-term (it was originally
-HiveManager-cloud-managed) — confirmed via Extreme's own support forum that
-losing cloud connectivity only degrades centralized manageability, never
-traffic-forwarding or configuration; the switch runs its full control plane
-on-device (HiveOS) and is reachable via local CLI/SSH and a local HTTPS web
-GUI. Real, honest caveat: this model is already past End-of-Sale and at/near
-End-of-Service-Life, so firmware is effectively frozen unless pulled via TFTP
-— a "no more updates" risk, not a cloud-lock-in one.
+Setup: Unbound moved to port 5353 and is AdGuard's upstream (so local and private
+lookups still work); AdGuard listens on 53 on loopback and the LAN address only,
+never the WAN. DHCP (Kea) still hands out the router as DNS, so no client changes.
 
-Considered replacing Orthrus (NETGEAR GS108PEv3) with it in the DeskPi
-RackMate T1 mini rack. For the actual device mix there (2 Intel NUCs,
-Chibiterasu, possibly a Raspberry Pi and a KVM-over-IP device), the
-headline PoE-budget advantage mostly doesn't apply — none of those are
-PoE-powered unless a KVM device specifically uses a PoE HAT. The genuine
-potential benefits would be SNMP/CLI monitoring integration into
-warning-core's Prometheus/Grafana, VLAN segmentation (useful for isolating
-an out-of-band KVM device specifically), and the 2 SFP uplinks for a future
-higher-bandwidth/fiber link to the main rack. Also a real downside: it's a
-desktop form factor, not true rack-mount, so it would sit loose on top of
-the mini rack rather than being properly mounted like Orthrus is.
+Tradeoffs accepted: the third-party package repository has no signature
+verification, so it was enabled only long enough to install the one package
+(dry-run first, a single package, no dependencies) and then disabled — a future
+`pkg upgrade` can't pull from it, and plugin updates mean re-enabling it
+deliberately. Config lives in OPNsense, not this repo; it's covered by OPNsense's
+own config backup.
 
-**Not committing to this yet** — noted here as a live option, not a decision.
-If it happens, keep the NETGEAR as a cold shelf-spare rather than discarding
-it, as a hedge against the Aerohive's actual hardware failing outright
-(a real EOL-hardware risk, separate from the cloud-dependency question).
+### Orthrus retired — the mini rack connects straight to Cerberus (2026-10-11)
+Orthrus (the NETGEAR GS108PEv3) existed only to bridge the distance between the
+mini rack and the main rack. The mini rack now sits on top of the main rack, so
+Holo and Chibiterasu connect directly to Cerberus, which has plenty of free ports.
+One fewer hop, one fewer device to maintain, and less power draw. The NETGEAR is
+kept as a cold spare. Nothing in the current device mix needs PoE; if that changes
+(a PoE camera, a PoE-powered KVM), a PoE-capable switch can be reconsidered then.
+The hostname `orthrus` is free to reuse.
 
 ---
 

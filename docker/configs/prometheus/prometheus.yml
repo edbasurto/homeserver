@@ -14,7 +14,7 @@ scrape_configs:
         labels: {host: holo}
       - targets: ['192.168.50.180:9100']
         labels: {host: amaterasu}
-      - targets: ['192.168.50.170:9100']
+      - targets: ['192.168.50.171:9100']
         labels: {host: chibiterasu}
       - targets: ['192.168.50.125:9100']
         labels: {host: sif}
@@ -26,7 +26,7 @@ scrape_configs:
         labels: {host: holo}
       - targets: ['192.168.50.180:8080']
         labels: {host: amaterasu}
-      - targets: ['192.168.50.170:8080']
+      - targets: ['192.168.50.171:8080']
         labels: {host: chibiterasu}
       - targets: ['192.168.50.125:8080']
         labels: {host: sif}

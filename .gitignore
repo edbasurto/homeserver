@@ -2,6 +2,9 @@
 # downloaded file
 k8s/cert-manager/cert-manager-1.4.0.yaml
 
+# Local-only Claude Code working rules — not for public GitHub
+CLAUDE.md
+
 # macOS
 .DS_Store
 **/.DS_Store

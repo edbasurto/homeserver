@@ -14,7 +14,7 @@ Environment name: **Johto** (Semaphore project, tag prefixes, future DNS zone)
 |---|---|---|---|---|
 | Amaterasu | MSI Z590 PRO WiFi, XEAL TC-1U50PD8 PSU (500W rated, 1U/ATX12V+EPS12V form factor) | Production Docker host | 192.168.50.180 | **Fully deployed and verified.** Already running the new stack-based architecture (mapped it out before touching anything — turned out to be further along than assumed, just one orphaned leftover service, which was removed). All 7 canonical stacks confirmed up and healthy. Quadro P620 driver + container passthrough working — Jellyfin's container confirmed sees the GPU (`nvidia-smi` clean inside it). |
 | Holo | Intel NUC7i5BNK (i5-7260U) | Ansible control plane + monitoring | 192.168.50.65 | **Fully deployed and verified.** devs-talk + warning-core running. Staying put for now — the planned migration to the P330 Tiny is on hold (see below). |
-| Chibiterasu | ThinkCentre M920q | Staging | 192.168.50.170 | **Fully deployed and verified.** warning-core (agents) running. RAM temporarily at 16GB (a second stick is earmarked but not installed yet). |
+| Chibiterasu | ThinkCentre M920q | Staging | 192.168.50.171 | **Fully deployed and verified.** warning-core (agents) running. RAM temporarily at 16GB (a second stick is earmarked but not installed yet). |
 | Kutone | Raspberry Pi 3B+ | NUT server + Discord Site Monitor Bot | 192.168.50.12 | **Live, verified.** Ubuntu Server 24.04.5 LTS. Now powered from the UPS's own Critical (battery-backed) outlet bank. Site monitor bot runs via systemd + venv (not Docker) — moved from Amaterasu 2026-09-19. |
 | Lycagon | ASRock Z490M-ITX/ac | OPNsense edge router (not configured) | — | QSFP+ NIC installed, needs a QSA adapter for 10G to the switch. Switch side is ready now — this is the next actionable physical task. |
 | Fenrir | Synology RS815 | NAS (DSM) | — | Existing, stable, outside the active migration. |
@@ -250,6 +250,7 @@ Amaterasu. `discord_monitor_bot_env` vault var moved from
     to enable **File Transfer via Plus Utility (TFTP)** — unlike the NSDP discovery mode enabled
     above, this would allow pushing firmware/config over an unauthenticated protocol; no real use
     case for it since the web UI already handles updates fine, so left disabled.
+  - **Retired 2026-10-11.** The mini rack now sits on top of the main rack, so its hosts connect straight to Cerberus and the extra hop is gone. Fewer devices and less power draw too. The switch is kept as a cold spare.
 
 ---
 
@@ -558,6 +559,22 @@ and reverted once in this project — see DECISIONS.md).
 
 ---
 
+## DNS filtering — AdGuard Home on OPNsense, 2026-10-08
+
+DNS filtering disappeared when the old router was replaced by OPNsense (Lycagon).
+Restored by installing AdGuard Home as an OPNsense plugin (see DECISIONS.md for the
+why and the tradeoffs).
+
+- Unbound moved to port 5353 and is AdGuard's upstream; AdGuard serves port 53 on
+  loopback and the LAN address only. DHCP still hands out the router as DNS.
+- Verified from the router and a LAN client: normal domains resolve, known ad domains
+  return `0.0.0.0` (the same names resolve normally straight from Unbound), Unbound's
+  query counter rises with each AdGuard lookup, and per-client IPs appear in the log.
+- Reverse lookups for DHCP clients don't return names — that's a property of Kea not
+  registering leases in DNS, and was the same before AdGuard.
+- Not yet verified: a cold reboot of the router with AdGuard bound to a specific
+  address. If DNS is down after a reboot, "Reload all services" is the first thing to try.
+
 ## Roadmap Progress
 
 Restructured 2026-09-18 — the old "Phase 1 (current)" label was swallowing basically the
@@ -576,7 +593,7 @@ like it wasn't happening. Four phases now, each with its own checklist.
     second fan slot is reserved for later. The switch and Amaterasu ride on 5"-8" adjustable
     rack extenders to actually fit the 12" rackable depth.
   - **DeskPi RackMate T1** — small/edge devices, top to bottom — NETGEAR ProSafe GS108PE (1U,
-    idle, reserved for future expansion — not in active use yet), Chibiterasu (1U), Zinogre
+    retired 2026-10-11, see the Orthrus section), Chibiterasu (1U), Zinogre
     (1U — hardware/role not yet tracked elsewhere in this doc), Holo (1U), 4U empty. No patch
     panel here yet; considered unnecessary at this scale for now.
 - [x] **Network**: 3850 switch reinstalled, VLAN 50 correct fleet-wide (see Networking section

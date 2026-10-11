@@ -65,7 +65,7 @@ Every host runs its stacks as plain Docker Compose files, generated and deployed
 | **Sif** | Lenovo ThinkCentre M910s | Ansible-managed, future NAS | 🟢 Live — legacy stack wiped, warning-core running; NAS storage pending a drive install |
 | **Zinogre** | Intel NUC | Game server (idle) | ⚪ Stopped — Palworld migrated to Amaterasu 2026-09-25, kept as a cold fallback |
 | **Cerberus** | Cisco Catalyst 3850-48P | Core switch | 🟢 Live — reinstalled, VLANs correct fleet-wide, SSH access configured |
-| **Orthrus** | NETGEAR GS108PEv3 | Edge switch, DeskPi RackMate T1 | 🟢 Live — static IP, loop detection on, firmware current (2.06.24) |
+| **Orthrus** | NETGEAR GS108PEv3 | Edge switch, DeskPi RackMate T1 | ⚪ Retired 2026-10-11 — the mini rack now sits on top of the main rack, so its hosts connect straight to Cerberus; kept as a cold spare |
 
 All three Docker hosts (Amaterasu, Holo, Chibiterasu) are now fully deployed and verified on the stack-based architecture above — the last piece to land was Amaterasu, which turned out to already be most of the way there once actually audited, rather than the ground-up migration originally assumed.
 
@@ -109,7 +109,7 @@ Main rack — 15U (17" external depth, 12" usable)
 
 DeskPi RackMate T1 — small/edge devices
 ┌────┬──────────────────────────────────────┐
-│ 1U │ Orthrus — NETGEAR GS108PEv3           │
+│ 1U │ (empty — Orthrus retired 2026-10-11)  │
 ├────┼──────────────────────────────────────┤
 │ 1U │ Chibiterasu                           │
 ├────┼──────────────────────────────────────┤

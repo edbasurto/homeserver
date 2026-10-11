@@ -16,3 +16,13 @@
     state: started
     restart: true
   ignore_errors: true
+
+# Same bind-mounted-config gotcha as couchdb above: prometheus.yml changing
+# on disk never recreates the container by itself, so new scrape targets
+# would silently never load.
+- name: restart prometheus
+  community.docker.docker_container:
+    name: prometheus
+    state: started
+    restart: true
+  ignore_errors: true

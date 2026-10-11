@@ -2,7 +2,7 @@
 [docker-hosts]
 amaterasu   ansible_host=192.168.50.180 ansible_user=ookami ansible_connection=ssh   ansible_ssh_private_key_file=~/.ssh/amaterasu
 holo        ansible_host=127.0.0.1      ansible_user=ookami ansible_connection=local
-chibiterasu ansible_host=192.168.50.170 ansible_user=ookami ansible_connection=ssh   ansible_ssh_private_key_file=~/.ssh/chibiterasu
+chibiterasu ansible_host=192.168.50.171 ansible_user=ookami ansible_connection=ssh   ansible_ssh_private_key_file=~/.ssh/chibiterasu
 sif         ansible_host=192.168.50.125 ansible_user=ookami ansible_connection=ssh   ansible_ssh_private_key_file=~/.ssh/sif
 
 [app_hosts]
