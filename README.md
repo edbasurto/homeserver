@@ -37,7 +37,7 @@ flowchart TB
 
     subgraph Holo["🐺 Holo — control plane"]
         direction TB
-        H1["devs-talk<br/>Semaphore · Forgejo · Wiki.js · Planka · code-server · MeshCentral"]
+        H1["devs-talk<br/>Semaphore · Forgejo · Wiki.js · Planka · code-server"]
         H2["warning-core<br/>Prometheus · Grafana"]
     end
 
@@ -137,7 +137,7 @@ Every stack name is a HANABIE song, reworked to hint at what it does.
 | `sunrise-mqtt-soup` | Sunrise Miso-Soup | Home Assistant, Mosquitto |
 | `spicy-queen-ctrl` | Spicy Queen | Homarr, Portainer, WhatUpDocker, Actual Budget |
 | `neet-game` | NEET GAME | Minecraft, Pelican (game-server panel, for future servers) |
-| `devs-talk` | Girl's Talk | Semaphore, Forgejo, Wiki.js, Planka, code-server, MeshCentral |
+| `devs-talk` | Girl's Talk | Semaphore, Forgejo, Wiki.js, Planka, code-server (MeshCentral disabled for now) |
 | `warning-core` | Warning!! | Prometheus + Grafana (Holo), agent-only elsewhere |
 | `good-day-so-epic` | Today's Good Day & So Epic | Sandbox — intentionally empty, Chibiterasu only |
 

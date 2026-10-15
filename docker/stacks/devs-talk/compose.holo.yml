@@ -102,26 +102,28 @@ services:
     ports:
       - "4500:3000"
 
-  meshcentral:
-    image: typhonragewind/meshcentral:mongodb-latest
-    container_name: meshcentral
-    restart: unless-stopped
-    labels:
-      com.ookami.stack: "devs-talk"
-      com.ookami.service: "meshcentral"
-      com.ookami.owner: "homelab"
-      com.ookami.environment: "dev"
-    depends_on:
-      - meshcentral-mongodb
-    env_file: .env.holo
-    volumes:
-      - /docker/configs/meshcentral:/opt/meshcentral/meshcentral-data
-      - meshcentral_data:/opt/meshcentral/meshcentral-files
-    networks:
-      - default
-      - proxy
-    ports:
-      - "8086:443"
+  # Disabled 2026-10-14: crash-looped (app couldn't resolve DB host 'mongodb';
+  # when re-enabling, point it at 'meshcentral-mongodb').
+  # meshcentral:
+  #   image: typhonragewind/meshcentral:mongodb-latest
+  #   container_name: meshcentral
+  #   restart: unless-stopped
+  #   labels:
+  #     com.ookami.stack: "devs-talk"
+  #     com.ookami.service: "meshcentral"
+  #     com.ookami.owner: "homelab"
+  #     com.ookami.environment: "dev"
+  #   depends_on:
+  #     - meshcentral-mongodb
+  #   env_file: .env.holo
+  #   volumes:
+  #     - /docker/configs/meshcentral:/opt/meshcentral/meshcentral-data
+  #     - meshcentral_data:/opt/meshcentral/meshcentral-files
+  #   networks:
+  #     - default
+  #     - proxy
+  #   ports:
+  #     - "8086:443"
 
   devs-postgres:
     image: postgres:15-alpine
@@ -139,19 +141,19 @@ services:
     networks:
       - default
 
-  meshcentral-mongodb:
-    image: mongo:latest
-    container_name: meshcentral-mongodb
-    restart: unless-stopped
-    labels:
-      com.ookami.stack: "devs-talk"
-      com.ookami.service: "meshcentral-mongodb"
-      com.ookami.owner: "homelab"
-      com.ookami.environment: "dev"
-    volumes:
-      - meshcentral-mongodb_data:/data/db
-    networks:
-      - default
+  # meshcentral-mongodb:
+  #   image: mongo:latest
+  #   container_name: meshcentral-mongodb
+  #   restart: unless-stopped
+  #   labels:
+  #     com.ookami.stack: "devs-talk"
+  #     com.ookami.service: "meshcentral-mongodb"
+  #     com.ookami.owner: "homelab"
+  #     com.ookami.environment: "dev"
+  #   volumes:
+  #     - meshcentral-mongodb_data:/data/db
+  #   networks:
+  #     - default
 
 volumes:
   code-server_data:
@@ -160,8 +162,8 @@ volumes:
   planka_data:
   planka-attachments_data:
   devs-postgres_data:
-  meshcentral_data:
-  meshcentral-mongodb_data:
+  # meshcentral_data:
+  # meshcentral-mongodb_data:
 
 networks:
   # holo has no tousou-gate/Traefik; local bridge until cross-host routing exists
